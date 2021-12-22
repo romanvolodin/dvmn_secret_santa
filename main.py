@@ -61,8 +61,18 @@ def budget_handler(update: Update, context: CallbackContext):
 def deadline_handler(update: Update, context: CallbackContext):
     context.user_data["budget"] = update.message.text  # стоимость, введенная пользователем
     print("Стоимость подарка", context.user_data["budget"])
-
-    update.message.reply_text("Период регистрации участников:")
+    reply_markup = ReplyKeyboardMarkup(
+        keyboard=[
+            [
+                KeyboardButton(text="до 25.12.2021\n(до 12.00 МСК)"),
+                KeyboardButton(text="до 31.12.2021\n(до 12.00 МСК)"),
+            ]
+        ]
+    )
+    update.message.reply_text(
+        text="Период регистрации участников:",
+        reply_markup=reply_markup,
+    )
     return SEND_DATE
 
 
