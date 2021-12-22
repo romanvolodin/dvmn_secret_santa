@@ -70,8 +70,7 @@ def finish_handler(update: Update, context: CallbackContext):
 
 
 def cancel(update: Update, context: CallbackContext) -> int:
-    """Cancels and ends the conversation."""
-    update.message.reply_text("Bye! I hope we can talk again some day.")
+    update.message.reply_text("Отмена создания игры")
     return ConversationHandler.END
 
 
@@ -95,23 +94,23 @@ if __name__ == "__main__":
         states={
             # статусы
             TITLE: [
-                MessageHandler(Filters.text, game_title_handler,
+                MessageHandler(Filters.text ^ Filters.command, game_title_handler,
                                pass_user_data=True)
             ],
             BUDGET: [
-                MessageHandler(Filters.text, budget_handler,
+                MessageHandler(Filters.text ^ Filters.command, budget_handler,
                                pass_user_data=True)
             ],
             DEADLINE: [
-                MessageHandler(Filters.text, deadline_handler,
+                MessageHandler(Filters.text ^ Filters.command, deadline_handler,
                                pass_user_data=True)
             ],
             SEND_DATE: [
-                MessageHandler(Filters.text, send_date_handler,
+                MessageHandler(Filters.text ^ Filters.command, send_date_handler,
                                pass_user_data=True)
             ],
             FINISH: [
-                MessageHandler(Filters.text, finish_handler,
+                MessageHandler(Filters.text | Filters.command, finish_handler,
                                pass_user_data=True)
             ],
         },
