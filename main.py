@@ -26,27 +26,27 @@ def start(update: Update, context: CallbackContext):
              "запусти праздничное настроение!",
         reply_markup=reply_markup,
     )
-    return NAME  # к какому статусу перейти далее
+    return TITLE  # к какому статусу перейти далее
 
 
-def game_name_handler(update: Update, context: CallbackContext):
+def game_title_handler(update: Update, context: CallbackContext):
     update.message.reply_text(
         "Введите название игры:", reply_markup=ReplyKeyboardRemove()
     )
-    return COST  # к какому статусу перейти далее
+    return BUDGET  # к какому статусу перейти далее
 
 
-def cost_handler(update: Update, context: CallbackContext):
-    context.user_data["game_name"] = update.message.text  # название игры, введенное пользователем
-    print("Название игры", context.user_data["game_name"])
+def budget_handler(update: Update, context: CallbackContext):
+    context.user_data["game_title"] = update.message.text  # название игры, введенное пользователем
+    print("Название игры", context.user_data["game_title"])
 
     update.message.reply_text("Укажите стоимость:")
-    return REG_DATE_LIMIT  # к какому статусу перейти далее
+    return DEADLINE  # к какому статусу перейти далее
 
 
-def reg_date_handler(update: Update, context: CallbackContext):
-    context.user_data["cost"] = update.message.text  # стоимость, введенная пользователем
-    print("Стоимость подарка", context.user_data["cost"])
+def deadline_handler(update: Update, context: CallbackContext):
+    context.user_data["budget"] = update.message.text  # стоимость, введенная пользователем
+    print("Стоимость подарка", context.user_data["budget"])
 
     update.message.reply_text("Период регистрации участников:")
     return ConversationHandler.END
@@ -70,23 +70,23 @@ if __name__ == "__main__":
     create_button_text = "Создать игру"
 
     # статусы
-    NAME, COST, REG_DATE_LIMIT, SEND_DATE = range(4)
+    TITLE, BUDGET, DEADLINE, SEND_DATE = range(4)
     conv_handler = ConversationHandler(
         entry_points=[
             CommandHandler("start", start)
         ],  # выдается на старте при вводе /start
         states={
             # статусы
-            NAME: [
-                MessageHandler(Filters.text, game_name_handler,
+            TITLE: [
+                MessageHandler(Filters.text, game_title_handler,
                                pass_user_data=True)
             ],
-            COST: [
-                MessageHandler(Filters.text, cost_handler,
+            BUDGET: [
+                MessageHandler(Filters.text, budget_handler,
                                pass_user_data=True)
             ],
-            REG_DATE_LIMIT: [
-                MessageHandler(Filters.text, reg_date_handler,
+            DEADLINE: [
+                MessageHandler(Filters.text, deadline_handler,
                                pass_user_data=True)
             ],
         },
