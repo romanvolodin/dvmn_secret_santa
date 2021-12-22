@@ -37,16 +37,16 @@ def game_name_handler(update: Update, context: CallbackContext):
 
 
 def cost_handler(update: Update, context: CallbackContext):
-    game_name = update.message.text  # название игры, введенное пользователем
-    print("Название игры", game_name)
+    context.user_data["game_name"] = update.message.text  # название игры, введенное пользователем
+    print("Название игры", context.user_data["game_name"])
 
     update.message.reply_text("Укажите стоимость:")
-    return REG_DATE_LIMIT # к какому статусу перейти далее
+    return REG_DATE_LIMIT  # к какому статусу перейти далее
 
 
 def reg_date_handler(update: Update, context: CallbackContext):
-    cost = update.message.text  # стоимость, введенная пользователем
-    print("Стоимость подарка", cost)
+    context.user_data["cost"] = update.message.text  # стоимость, введенная пользователем
+    print("Стоимость подарка", context.user_data["cost"])
 
     update.message.reply_text("Период регистрации участников:")
     return ConversationHandler.END
@@ -77,9 +77,18 @@ if __name__ == "__main__":
         ],  # выдается на старте при вводе /start
         states={
             # статусы
-            NAME: [MessageHandler(Filters.text, game_name_handler)],
-            COST: [MessageHandler(Filters.text, cost_handler)],
-            REG_DATE_LIMIT: [MessageHandler(Filters.text, reg_date_handler)],
+            NAME: [
+                MessageHandler(Filters.text, game_name_handler,
+                               pass_user_data=True)
+            ],
+            COST: [
+                MessageHandler(Filters.text, cost_handler,
+                               pass_user_data=True)
+            ],
+            REG_DATE_LIMIT: [
+                MessageHandler(Filters.text, reg_date_handler,
+                               pass_user_data=True)
+            ],
         },
         fallbacks=[CommandHandler("cancel", cancel)],
     )
