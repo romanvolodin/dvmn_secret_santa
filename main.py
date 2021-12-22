@@ -39,8 +39,22 @@ def game_title_handler(update: Update, context: CallbackContext):
 def budget_handler(update: Update, context: CallbackContext):
     context.user_data["game_title"] = update.message.text  # название игры, введенное пользователем
     print("Название игры", context.user_data["game_title"])
-
-    update.message.reply_text("Укажите стоимость:")
+    reply_markup = ReplyKeyboardMarkup(
+        keyboard=[
+            [
+                KeyboardButton(text="Нет"),
+                KeyboardButton(text="до 500 руб"),
+             ],
+            [
+                KeyboardButton(text="500-1000 руб"),
+                KeyboardButton(text="1000-2000 руб"),
+            ]
+        ]
+    )
+    update.message.reply_text(
+        text="Ограничение стоимости подарка:",
+        reply_markup=reply_markup,
+    )
     return DEADLINE  # к какому статусу перейти далее
 
 
