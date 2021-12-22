@@ -17,6 +17,18 @@ from telegram.ext import (
 )
 
 
+BUDGET_OPTIONS = [
+        "Нет",
+        "до 500 руб",
+        "500-1000 руб",
+        "1000-2000 руб"
+    ]
+DEADLINE_OPTIONS = [
+        "до 25.12.2021",
+        "до 31.12.2021"
+    ]
+
+
 def start(update: Update, context: CallbackContext):
     reply_markup = ReplyKeyboardMarkup(
         keyboard=[[KeyboardButton(text=create_button_text)]]
@@ -42,12 +54,12 @@ def budget_handler(update: Update, context: CallbackContext):
     reply_markup = ReplyKeyboardMarkup(
         keyboard=[
             [
-                KeyboardButton(text="Нет"),
-                KeyboardButton(text="до 500 руб"),
+                KeyboardButton(text=BUDGET_OPTIONS[0]),
+                KeyboardButton(text=BUDGET_OPTIONS[1]),
              ],
             [
-                KeyboardButton(text="500-1000 руб"),
-                KeyboardButton(text="1000-2000 руб"),
+                KeyboardButton(text=BUDGET_OPTIONS[2]),
+                KeyboardButton(text=BUDGET_OPTIONS[3]),
             ]
         ]
     )
@@ -64,8 +76,8 @@ def deadline_handler(update: Update, context: CallbackContext):
     reply_markup = ReplyKeyboardMarkup(
         keyboard=[
             [
-                KeyboardButton(text="до 25.12.2021\n(до 12.00 МСК)"),
-                KeyboardButton(text="до 31.12.2021\n(до 12.00 МСК)"),
+                KeyboardButton(text=DEADLINE_OPTIONS[0]),
+                KeyboardButton(text=DEADLINE_OPTIONS[1]),
             ]
         ]
     )
@@ -121,19 +133,27 @@ if __name__ == "__main__":
         states={
             # статусы
             TITLE: [
-                MessageHandler(Filters.text ^ Filters.command, game_title_handler,
+                MessageHandler(Filters.regex(create_button_text),
+                               game_title_handler,
                                pass_user_data=True)
             ],
             BUDGET: [
-                MessageHandler(Filters.text ^ Filters.command, budget_handler,
+                MessageHandler(Filters.text ^ Filters.command,
+                               budget_handler,
                                pass_user_data=True)
             ],
             DEADLINE: [
-                MessageHandler(Filters.text ^ Filters.command, deadline_handler,
+                MessageHandler(Filters.regex(f"^({BUDGET_OPTIONS[0]}|"
+                                             f"{BUDGET_OPTIONS[1]}|"
+                                             f"{BUDGET_OPTIONS[2]}|"
+                                             f"{BUDGET_OPTIONS[3]})$"),
+                               deadline_handler,
                                pass_user_data=True)
             ],
             SEND_DATE: [
-                MessageHandler(Filters.text ^ Filters.command, send_date_handler,
+                MessageHandler(Filters.regex(f"^({DEADLINE_OPTIONS[0]}|"
+                                             f"{DEADLINE_OPTIONS[1]})$"),
+                               send_date_handler,
                                pass_user_data=True)
             ],
             FINISH: [
