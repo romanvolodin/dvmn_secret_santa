@@ -80,7 +80,10 @@ def send_date_handler(update: Update, context: CallbackContext):
     context.user_data["deadline"] = update.message.text
     print("Дедлайн", context.user_data["deadline"])
 
-    update.message.reply_text("Дата отправки подарка:")
+    update.message.reply_text(
+        text="Дата отправки подарка:",
+        reply_markup=ReplyKeyboardRemove()
+    )
     return FINISH
 
 
