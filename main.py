@@ -49,6 +49,23 @@ def deadline_handler(update: Update, context: CallbackContext):
     print("Стоимость подарка", context.user_data["budget"])
 
     update.message.reply_text("Период регистрации участников:")
+    return SEND_DATE
+
+
+def send_date_handler(update: Update, context: CallbackContext):
+    context.user_data["deadline"] = update.message.text
+    print("Дедлайн", context.user_data["deadline"])
+
+    update.message.reply_text("Дата отправки подарка:")
+    return FINISH
+
+
+def finish_handler(update: Update, context: CallbackContext):
+    context.user_data["send_date"] = update.message.text
+    print("Отправка", context.user_data["send_date"])
+    update.message.reply_text("Отлично, Тайный Санта уже готовится "
+                              "к раздаче подарков!")
+    print(context.user_data)
     return ConversationHandler.END
 
 
@@ -70,7 +87,7 @@ if __name__ == "__main__":
     create_button_text = "Создать игру"
 
     # статусы
-    TITLE, BUDGET, DEADLINE, SEND_DATE = range(4)
+    TITLE, BUDGET, DEADLINE, SEND_DATE, FINISH = range(5)
     conv_handler = ConversationHandler(
         entry_points=[
             CommandHandler("start", start)
@@ -87,6 +104,14 @@ if __name__ == "__main__":
             ],
             DEADLINE: [
                 MessageHandler(Filters.text, deadline_handler,
+                               pass_user_data=True)
+            ],
+            SEND_DATE: [
+                MessageHandler(Filters.text, send_date_handler,
+                               pass_user_data=True)
+            ],
+            FINISH: [
+                MessageHandler(Filters.text, finish_handler,
                                pass_user_data=True)
             ],
         },
