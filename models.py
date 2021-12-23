@@ -4,7 +4,7 @@ from peewee import (
     IntegerField,
     CharField,
     TextField,
-    DateField,
+    DateTimeField,
     ForeignKeyField,
 )
 
@@ -29,9 +29,9 @@ class Game(Model):
     id = IntegerField(unique=True)
     reg_link = CharField()
     title = CharField()
-    deadline = DateField()
-    budget = IntegerField()
-    gift_send_date = DateField()
+    deadline = DateTimeField()
+    budget = CharField()
+    gift_send_date = CharField()
     created_by = ForeignKeyField(User, backref="games")
 
     class Meta:
