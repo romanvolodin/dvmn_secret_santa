@@ -39,13 +39,6 @@ def add_game(context_data):
 
     reg_link = "Temporaly empty"  # Тут будет каким-то образом формироваться "ссылка"
 
-    deadline_str = context_data["deadline"] + " 12:00"
-    deadline = datetime.strptime(f"{deadline_str}", "%d.%m.%Y %H:%M")
-    msk_tz = timezone("Europe/Moscow")
-    deadline_msk = msk_tz.localize(deadline)
-    deadline_local_tz = deadline_msk.astimezone(get_localzone())
-    deadline_local = deadline_local_tz.replace(tzinfo=None)
-
     try:
         User.get(User.id == context_data["user_id"])
     except DoesNotExist:
@@ -55,7 +48,7 @@ def add_game(context_data):
         id=game_id,
         reg_link=reg_link,
         title=context_data["game_title"],
-        deadline=deadline_local,
+        deadline=context_data["deadline"],
         budget=context_data["budget"],
         gift_send_date=context_data["send_date"],
         created_by=context_data["user_id"],

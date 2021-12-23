@@ -29,7 +29,7 @@ class Game(Model):
     id = IntegerField(unique=True)
     reg_link = CharField()
     title = CharField()
-    deadline = DateTimeField()
+    deadline = CharField()
     budget = CharField()
     gift_send_date = CharField()
     created_by = ForeignKeyField(User, backref="games")
