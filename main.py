@@ -1,3 +1,4 @@
+import datetime as dt
 import logging
 
 from environs import Env
@@ -89,7 +90,10 @@ def deadline_handler(update: Update, context: CallbackContext):
 
 
 def send_date_handler(update: Update, context: CallbackContext):
-    context.user_data["deadline"] = update.message.text
+    if update.message.text == DEADLINE_OPTIONS[0]:
+        context.user_data["deadline"] = dt.datetime(2021, 12, 25)
+    else:
+        context.user_data["deadline"] = dt.datetime(2021, 12, 31)
     print("Дедлайн", context.user_data["deadline"])
 
     update.message.reply_text(
