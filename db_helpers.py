@@ -62,3 +62,35 @@ def add_game(context_data):
     )
 
     GameAdmin.create(id=admin_id, user=context_data["user_id"], game=game_id)
+
+
+def add_user(context_data):
+    max_member_id = GameMember.select(fn.MAX(GameMember.id)).scalar()
+    if max_member_id:
+        member_id = max_member_id + 1
+    else:
+        member_id = 1
+
+    try:
+        user = User.get(User.id == context_data["user_id"])
+        user.name = context_data["name"]
+        user.email = context_data["email"]
+        user.wishlist = context_data["wishlist"].replace("Пропустить", "")
+        user.interests = context_data["interests"].replace("Пропустить", "")
+        user.letter = context_data["letter"].replace("Пропустить", "")
+        user.save()
+    except DoesNotExist:
+        User.create(
+            id=context_data["user_id"],
+            name=context_data["name"],
+            email=context_data["email"],
+            wishlist=context_data["wishlist"].replace("Пропустить", ""),
+            interests=context_data["interests"].replace("Пропустить", ""),
+            letter=context_data["letter"].replace("Пропустить", ""),
+        )
+
+    GameMember.create(
+        id=member_id,
+        user=context_data["user_id"],
+        game=context_data["game_id"],
+    )
