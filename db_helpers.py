@@ -1,7 +1,9 @@
-from datetime import date, datetime
+from datetime import datetime
 from pathlib import Path
 
-from peewee import fn
+from peewee import DoesNotExist, fn
+from pytz import timezone
+from tzlocal import get_localzone
 
 from models import (
     db,
@@ -34,34 +36,29 @@ def add_game(context_data):
         admin_id = max_admin_id + 1
     else:
         admin_id = 1
-    
-    reg_link = 'Temporaly empty' # Тут будет каким-то образом формироваться "ссылка"
 
-    deadline_str = context_data['deadline']
-    deadline = datetime.strptime(f'{deadline_str}', '%d.%m.%Y').date()
+    reg_link = "Temporaly empty"  # Тут будет каким-то образом формироваться "ссылка"
 
-    gift_send_date_str = context_data['gift_send_date']
-    gift_send_date = datetime.strptime(f'{gift_send_date_str}', '%d.%m.%Y').date()
+    deadline_str = context_data["deadline"] + " 12:00"
+    deadline = datetime.strptime(f"{deadline_str}", "%d.%m.%Y %H:%M")
+    msk_tz = timezone("Europe/Moscow")
+    deadline_msk = msk_tz.localize(deadline)
+    deadline_local_tz = deadline_msk.astimezone(get_localzone())
+    deadline_local = deadline_local_tz.replace(tzinfo=None)
 
     try:
-        User.get(User.id == context_data['user_id'])
-    except:
-        User.create(
-            id=context_data['user_id']         
-        )
+        User.get(User.id == context_data["user_id"])
+    except DoesNotExist:
+        User.create(id=context_data["user_id"])
 
     Game.create(
         id=game_id,
         reg_link=reg_link,
-        title=context_data['game_name'],
-        deadline=deadline,
-        budget=context_data['cost'],
-        gift_send_date=gift_send_date,
-        created_by=context_data['user_id']
+        title=context_data["game_title"],
+        deadline=deadline_local,
+        budget=context_data["budget"],
+        gift_send_date=context_data["send_date"],
+        created_by=context_data["user_id"],
     )
 
-    GameAdmin.create(
-        id=admin_id,
-        user=context_data['user_id'],
-        game=game_id
-    )
+    GameAdmin.create(id=admin_id, user=context_data["user_id"], game=game_id)
