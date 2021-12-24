@@ -94,9 +94,9 @@ def deadline_handler(update: Update, context: CallbackContext):
 
 def send_date_handler(update: Update, context: CallbackContext):
     if update.message.text == DEADLINE_OPTIONS[0]:
-        context.user_data["deadline"] = dt.datetime(2021, 12, 25)
+        context.user_data["deadline"] = dt.datetime(2021, 12, 25, hour=12)
     else:
-        context.user_data["deadline"] = dt.datetime(2021, 12, 31)
+        context.user_data["deadline"] = dt.datetime(2021, 12, 31, hour=12)
     print("Дедлайн", context.user_data["deadline"])
 
     update.message.reply_text(
@@ -114,6 +114,8 @@ def finish_handler(update: Update, context: CallbackContext):
     update.message.reply_text("Отлично, Тайный Санта уже готовится "
                               "к раздаче подарков!")
     print(context.user_data)
+    print(update.message.from_user.id)
+    print(User.get_or_create(id=update.message.from_user.id))
     user, is_created = User.get_or_create(id=update.message.from_user.id)
     game = Game.create(
         reg_link=f"http://t.me/DvmnSecretSantaBot/start={str(uuid.uuid4())[:8]}",
