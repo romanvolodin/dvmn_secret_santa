@@ -120,7 +120,7 @@ def finish_handler(update: Update, context: CallbackContext):
         )
     except ValueError:
         update.message.reply_text(
-            text="Упс. Что-то пошло не так. Введите дату формате 15.01.2022:"
+            text="Упс. Что-то пошло не так. Введите дату в формате 15.01.2022:"
         )
         return FINISH
     print("Отправка", context.user_data["send_date"])
