@@ -27,9 +27,9 @@ class User(Model):
 class Game(Model):
     reg_link = CharField()
     title = CharField()
-    deadline = CharField()
+    deadline = DateTimeField()
     budget = CharField()
-    gift_send_date = CharField()
+    gift_send_date = DateTimeField()
     created_by = ForeignKeyField(User, backref="games")
 
     class Meta:
