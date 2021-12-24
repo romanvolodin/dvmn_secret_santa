@@ -31,6 +31,7 @@ DEADLINE_OPTIONS = [
         "до 25.12.2021",
         "до 31.12.2021"
     ]
+regex_for_date = r"\d{1,2}.\d{1,2}.2022"
 
 
 def start(update: Update, context: CallbackContext):
@@ -107,15 +108,20 @@ def send_date_handler(update: Update, context: CallbackContext):
 
 
 def finish_handler(update: Update, context: CallbackContext):
-    context.user_data["send_date"] = dt.datetime.strptime(
-        update.message.text, "%d.%m.%Y"
-    )
+    try:
+        context.user_data["send_date"] = dt.datetime.strptime(
+            update.message.text, "%d.%m.%Y"
+        )
+    except ValueError:
+        update.message.reply_text(
+            text="Упс. Что-то пошло не так. Введите дату формате 15.01.2022:"
+        )
+        return FINISH
     print("Отправка", context.user_data["send_date"])
     update.message.reply_text("Отлично, Тайный Санта уже готовится "
                               "к раздаче подарков!")
     print(context.user_data)
-    print(update.message.from_user.id)
-    print(User.get_or_create(id=update.message.from_user.id))
+
     user, is_created = User.get_or_create(id=update.message.from_user.id)
     game = Game.create(
         reg_link=f"http://t.me/DvmnSecretSantaBot/start={str(uuid.uuid4())[:8]}",
@@ -181,7 +187,8 @@ if __name__ == "__main__":
                                pass_user_data=True)
             ],
             FINISH: [
-                MessageHandler(Filters.text | Filters.command, finish_handler,
+                MessageHandler(Filters.regex(regex_for_date) | Filters.command,
+                               finish_handler,
                                pass_user_data=True)
             ],
         },
