@@ -12,18 +12,20 @@ db_file = "secret_santa.db"
 db = SqliteDatabase(db_file, pragmas={"foreign_keys": 1})
 
 
-class User(Model):
+class BaseModel(Model):
+    class Meta:
+        database = db
+
+
+class User(BaseModel):
     name = CharField(default="")
     email = CharField(default="")
     wishlist = TextField(default="")
     interests = TextField(default="")
     letter = TextField(default="")
 
-    class Meta:
-        database = db
 
-
-class Game(Model):
+class Game(BaseModel):
     reg_link = CharField()
     title = CharField()
     deadline = DateTimeField()
@@ -31,30 +33,18 @@ class Game(Model):
     gift_send_date = DateTimeField()
     created_by = ForeignKeyField(User, backref="games")
 
-    class Meta:
-        database = db
 
-
-class GameAdmin(Model):
+class GameAdmin(BaseModel):
     user = ForeignKeyField(User)
     game = ForeignKeyField(Game)
 
-    class Meta:
-        database = db
 
-
-class GameMember(Model):
+class GameMember(BaseModel):
     user = ForeignKeyField(User)
     game = ForeignKeyField(Game)
 
-    class Meta:
-        database = db
 
-
-class Match(Model):
+class Match(BaseModel):
     game = ForeignKeyField(Game)
     giver = ForeignKeyField(User)
     recipient = ForeignKeyField(User)
-
-    class Meta:
-        database = db
