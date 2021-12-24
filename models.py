@@ -10,11 +10,10 @@ from peewee import (
 
 
 db_file = "secret_santa.db"
-db = SqliteDatabase(db_file)
+db = SqliteDatabase(db_file, pragmas={"foreign_keys": 1})
 
 
 class User(Model):
-    id = IntegerField(unique=True)
     name = CharField(default="")
     email = CharField(default="")
     wishlist = TextField(default="")
@@ -26,7 +25,6 @@ class User(Model):
 
 
 class Game(Model):
-    id = IntegerField(unique=True)
     reg_link = CharField()
     title = CharField()
     deadline = CharField()
@@ -39,7 +37,6 @@ class Game(Model):
 
 
 class GameAdmin(Model):
-    id = IntegerField(unique=True)
     user = ForeignKeyField(User)
     game = ForeignKeyField(Game)
 
@@ -48,7 +45,6 @@ class GameAdmin(Model):
 
 
 class GameMember(Model):
-    id = IntegerField(unique=True)
     user = ForeignKeyField(User)
     game = ForeignKeyField(Game)
 
@@ -57,7 +53,6 @@ class GameMember(Model):
 
 
 class Match(Model):
-    id = IntegerField(unique=True)
     game = ForeignKeyField(Game)
     giver = ForeignKeyField(User)
     recipient = ForeignKeyField(User)
