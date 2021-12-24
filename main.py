@@ -47,6 +47,11 @@ def start(update: Update, context: CallbackContext):
     return TITLE  # к какому статусу перейти далее
 
 
+def deep_linked(update: Update, context: CallbackContext) -> None:
+    context.user_data["game_id"] = context.args[0]
+    update.message.reply_text(f"Замечательно, ты собираешься участвовать в игре ...\n")
+
+
 def game_title_handler(update: Update, context: CallbackContext):
     update.message.reply_text(
         "Введите название игры:", reply_markup=ReplyKeyboardRemove()
@@ -206,6 +211,7 @@ if __name__ == "__main__":
 
     updater = Updater(token=env.str("BOT_TOKEN"), use_context=True)
     dispatcher = updater.dispatcher
+    dispatcher.add_handler(CommandHandler("start", deep_linked, Filters.regex(r"\d+")))
     dispatcher.add_handler(conv_handler)
 
     updater.start_polling()  # Запуск бота
