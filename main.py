@@ -118,14 +118,15 @@ def finish_handler(update: Update, context: CallbackContext):
         )
         return FINISH
     print("Отправка", context.user_data["send_date"])
-    update.message.reply_text("Отлично, Тайный Санта уже готовится "
-                              "к раздаче подарков!")
     print(context.user_data)
 
     user, is_created = User.get_or_create(id=update.message.from_user.id)
+    deep_link = f"http://t.me/DvmnSecretSantaBot/start={str(uuid.uuid4())[:8]}"
+    game_title = context.user_data["game_title"]
+
     game = Game.create(
-        reg_link=f"http://t.me/DvmnSecretSantaBot/start={str(uuid.uuid4())[:8]}",
-        title=context.user_data["game_title"],
+        reg_link=deep_link,
+        title=game_title,
         budget=context.user_data["budget"],
         deadline=context.user_data["deadline"],
         gift_send_date=context.user_data["send_date"],
@@ -135,6 +136,10 @@ def finish_handler(update: Update, context: CallbackContext):
         user=user,
         game=game,
     )
+    update.message.reply_text("Отлично, Тайный Санта уже готовится "
+                              "к раздаче подарков!")
+    update.message.reply_text(f'Ссылка для регистрации в игре "{game_title}": '
+                              f'{deep_link}')
     return ConversationHandler.END
 
 
