@@ -1,5 +1,6 @@
 import datetime as dt
 import logging
+import uuid
 
 from environs import Env
 from telegram import (
@@ -16,6 +17,8 @@ from telegram.ext import (
     Filters,
     ConversationHandler,
 )
+
+from models import Game, User, GameAdmin
 
 
 BUDGET_OPTIONS = [
@@ -97,18 +100,33 @@ def send_date_handler(update: Update, context: CallbackContext):
     print("Дедлайн", context.user_data["deadline"])
 
     update.message.reply_text(
-        text="Дата отправки подарка:",
+        text="Дата отправки подарка (например 15.01.2022):",
         reply_markup=ReplyKeyboardRemove()
     )
     return FINISH
 
 
 def finish_handler(update: Update, context: CallbackContext):
-    context.user_data["send_date"] = update.message.text
+    context.user_data["send_date"] = dt.datetime.strptime(
+        update.message.text, "%d.%m.%Y"
+    )
     print("Отправка", context.user_data["send_date"])
     update.message.reply_text("Отлично, Тайный Санта уже готовится "
                               "к раздаче подарков!")
     print(context.user_data)
+    user, is_created = User.get_or_create(id=update.message.from_user.id)
+    game = Game.create(
+        reg_link=f"http://t.me/DvmnSecretSantaBot/start={str(uuid.uuid4())[:8]}",
+        title=context.user_data["game_title"],
+        budget=context.user_data["budget"],
+        deadline=context.user_data["deadline"],
+        gift_send_date=context.user_data["send_date"],
+        created_by=user,
+    )
+    GameAdmin.create(
+        user=user,
+        game=game,
+    )
     return ConversationHandler.END
 
 
