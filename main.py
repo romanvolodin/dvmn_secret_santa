@@ -134,7 +134,7 @@ def finish_handler(update: Update, context: CallbackContext):
     game_title = context.user_data["game_title"]
 
     game = Game.create(
-        reg_link=deep_link_payload,
+        game_link_id=deep_link_payload,
         title=game_title,
         budget=context.user_data["budget"],
         deadline=context.user_data["deadline"],

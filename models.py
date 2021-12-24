@@ -26,7 +26,7 @@ class User(BaseModel):
 
 
 class Game(BaseModel):
-    reg_link = CharField()
+    game_link_id = CharField()
     title = CharField()
     deadline = DateTimeField()
     budget = CharField()
