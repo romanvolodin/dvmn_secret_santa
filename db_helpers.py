@@ -87,3 +87,7 @@ def add_user(context_data):
         user=context_data["user_id"],
         game=context_data["game_id"],
     )
+
+
+if __name__ == "__main__":
+    create_db()
