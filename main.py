@@ -17,6 +17,7 @@ from telegram.ext import (
     Filters,
     ConversationHandler,
 )
+from telegram.utils import helpers
 
 from models import Game, User, GameAdmin
 
@@ -121,11 +122,14 @@ def finish_handler(update: Update, context: CallbackContext):
     print(context.user_data)
 
     user, is_created = User.get_or_create(id=update.message.from_user.id)
-    deep_link = f"http://t.me/DvmnSecretSantaBot/start={str(uuid.uuid4())[:8]}"
+    bot = context.bot
+    deep_link_payload = str(uuid.uuid4())[:8]
+    deep_link = helpers.create_deep_linked_url(bot.username, deep_link_payload)
+
     game_title = context.user_data["game_title"]
 
     game = Game.create(
-        reg_link=deep_link,
+        reg_link=deep_link_payload,
         title=game_title,
         budget=context.user_data["budget"],
         deadline=context.user_data["deadline"],
