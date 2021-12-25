@@ -32,16 +32,22 @@ regex_for_date = r"\d{1,2}.\d{1,2}.2022"
 
 def start(update: Update, context: CallbackContext):
     if context.args:
-        context.user_data["game_id"] = context.args[0]
         reply_markup = ReplyKeyboardMarkup(
             keyboard=[[KeyboardButton(text="Регистрация")]]
         )
-        game = Game.get(Game.game_link_id == context.args[0])
-        update.message.reply_text(
-            f"Замечательно, ты собираешься участвовать в игре '{game.title}'\n",
-            reply_markup=reply_markup,
-        )
-        return
+        game = Game.get_or_none(Game.game_link_id == context.args[0])
+        if game is None:
+            update.message.reply_text(
+                f"Игра с id '{context.args[0]}' не найдена.\n"
+                "Не расстраивайтесь, создайте новую игру."
+            )
+        if game:
+            context.user_data["game_id"] = context.args[0]
+            update.message.reply_text(
+                f"Замечательно, ты собираешься участвовать в игре '{game.title}'\n",
+                reply_markup=reply_markup,
+            )
+            return
 
     reply_markup = ReplyKeyboardMarkup(
         keyboard=[[KeyboardButton(text=create_button_text)]]
