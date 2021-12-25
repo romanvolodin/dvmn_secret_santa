@@ -73,7 +73,7 @@ def finish_handler(update: Update, context: CallbackContext):
     game = context.user_data["current_game"]
     update.message.reply_text(
         "Превосходно, ты в игре!\n"
-        f"{game.deadline} мы проведем жеребьевку и ты "
+        f"{game.deadline.strftime('%d.%m.%Y в %H:%M(МСК)')} мы проведем жеребьевку и ты "
         "узнаешь имя и контакты своего тайного друга. "
         "Ему и нужно будет подарить подарок!"
     )

@@ -43,10 +43,10 @@ def start(update: Update, context: CallbackContext):
             context.user_data["game_id"] = context.args[0]
             context.user_data["current_game"] = game
             update.message.reply_text(
-                text=f"Замечательно, ты собираешься участвовать в игре {game.title},\n"
-                f"ограничение стоимости подарка: {game.budget},\n"
-                f"период регистрации: {game.deadline},\n"
-                f"дата отправки подарков: {game.gift_send_date}",
+                text=f"Замечательно, ты собираешься участвовать в игре “{game.title}“:\n"
+                f"• ограничение стоимости подарка: {game.budget},\n"
+                f"• период регистрации: до {game.deadline.strftime('%d.%m.%Y, %H:%M(МСК)')},\n"
+                f"• дата отправки подарков: {game.gift_send_date.strftime('%d.%m.%Y')}",
                 reply_markup=reply_markup,
             )
             return member.NAME
