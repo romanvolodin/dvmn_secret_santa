@@ -46,8 +46,7 @@ def username_handler(update: Update, context: CallbackContext):
             reply_markup=ReplyKeyboardRemove(),
         )
         return ConversationHandler.END
-    update.message.reply_text(text="Представьтесь:",
-                              reply_markup=ReplyKeyboardRemove())
+    update.message.reply_text(text="Представьтесь:", reply_markup=ReplyKeyboardRemove())
     return EMAIL
 
 
@@ -105,8 +104,7 @@ if __name__ == "__main__":
     env.read_env()
 
     logging.basicConfig(
-        format="%(levelname)s: %(asctime)s - %(name)s - %(message)s",
-        level=logging.INFO
+        format="%(levelname)s: %(asctime)s - %(name)s - %(message)s", level=logging.INFO
     )
 
     NAME, EMAIL, WISHLIST, INTERESTS, LETTER, FINISH = range(6)
@@ -122,9 +120,7 @@ if __name__ == "__main__":
             ],
             EMAIL: [
                 MessageHandler(
-                    Filters.text ^ Filters.command,
-                    email_handler,
-                    pass_user_data=True
+                    Filters.text ^ Filters.command, email_handler, pass_user_data=True
                 )
             ],
             WISHLIST: [
@@ -143,16 +139,12 @@ if __name__ == "__main__":
             ],
             LETTER: [
                 MessageHandler(
-                    Filters.text ^ Filters.command,
-                    letter_handler,
-                    pass_user_data=True
+                    Filters.text ^ Filters.command, letter_handler, pass_user_data=True
                 )
             ],
             FINISH: [
                 MessageHandler(
-                    Filters.text ^ Filters.command,
-                    finish_handler,
-                    pass_user_data=True
+                    Filters.text ^ Filters.command, finish_handler, pass_user_data=True
                 )
             ],
         },

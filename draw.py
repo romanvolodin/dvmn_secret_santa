@@ -20,9 +20,8 @@ def automatic_draw():
     for game in games:
         users = GameMember.select().where(GameMember.game == game.id)
         draw(users)
-        
+
 
 def manual_draw(game_id):
     users = GameMember.select().where(GameMember.game == game_id)
     draw(users)
-

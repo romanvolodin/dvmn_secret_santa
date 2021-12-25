@@ -22,16 +22,8 @@ from telegram.utils import helpers
 from models import Game, User, GameAdmin
 
 
-BUDGET_OPTIONS = [
-        "Нет",
-        "до 500 руб",
-        "500-1000 руб",
-        "1000-2000 руб"
-    ]
-DEADLINE_OPTIONS = [
-        "до 25.12.2021",
-        "до 31.12.2021"
-    ]
+BUDGET_OPTIONS = ["Нет", "до 500 руб", "500-1000 руб", "1000-2000 руб"]
+DEADLINE_OPTIONS = ["до 25.12.2021", "до 31.12.2021"]
 regex_for_date = r"\d{1,2}.\d{1,2}.2022"
 
 
@@ -40,8 +32,7 @@ def start(update: Update, context: CallbackContext):
         keyboard=[[KeyboardButton(text=create_button_text)]]
     )
     update.message.reply_text(
-        text="Организуй тайный обмен подарками, "
-             "запусти праздничное настроение!",
+        text="Организуй тайный обмен подарками, запусти праздничное настроение!",
         reply_markup=reply_markup,
     )
     return TITLE  # к какому статусу перейти далее
@@ -49,7 +40,7 @@ def start(update: Update, context: CallbackContext):
 
 def deep_linked(update: Update, context: CallbackContext) -> None:
     context.user_data["game_id"] = context.args[0]
-    update.message.reply_text(f"Замечательно, ты собираешься участвовать в игре ...\n")
+    update.message.reply_text("Замечательно, ты собираешься участвовать в игре ...\n")
 
 
 def game_title_handler(update: Update, context: CallbackContext):
@@ -60,18 +51,20 @@ def game_title_handler(update: Update, context: CallbackContext):
 
 
 def budget_handler(update: Update, context: CallbackContext):
-    context.user_data["game_title"] = update.message.text  # название игры, введенное пользователем
+    context.user_data[
+        "game_title"
+    ] = update.message.text  # название игры, введенное пользователем
     print("Название игры", context.user_data["game_title"])
     reply_markup = ReplyKeyboardMarkup(
         keyboard=[
             [
                 KeyboardButton(text=BUDGET_OPTIONS[0]),
                 KeyboardButton(text=BUDGET_OPTIONS[1]),
-             ],
+            ],
             [
                 KeyboardButton(text=BUDGET_OPTIONS[2]),
                 KeyboardButton(text=BUDGET_OPTIONS[3]),
-            ]
+            ],
         ]
     )
     update.message.reply_text(
@@ -82,7 +75,9 @@ def budget_handler(update: Update, context: CallbackContext):
 
 
 def deadline_handler(update: Update, context: CallbackContext):
-    context.user_data["budget"] = update.message.text  # стоимость, введенная пользователем
+    context.user_data[
+        "budget"
+    ] = update.message.text  # стоимость, введенная пользователем
     print("Стоимость подарка", context.user_data["budget"])
     reply_markup = ReplyKeyboardMarkup(
         keyboard=[
@@ -108,7 +103,7 @@ def send_date_handler(update: Update, context: CallbackContext):
 
     update.message.reply_text(
         text="Дата отправки подарка (например 15.01.2022):",
-        reply_markup=ReplyKeyboardRemove()
+        reply_markup=ReplyKeyboardRemove(),
     )
     return FINISH
 
@@ -145,10 +140,10 @@ def finish_handler(update: Update, context: CallbackContext):
         user=user,
         game=game,
     )
-    update.message.reply_text("Отлично, Тайный Санта уже готовится "
-                              "к раздаче подарков!")
-    update.message.reply_text(f'Ссылка для регистрации в игре "{game_title}": '
-                              f'{deep_link}')
+    update.message.reply_text("Отлично, Тайный Санта уже готовится к раздаче подарков!")
+    update.message.reply_text(
+        f'Ссылка для регистрации в игре "{game_title}": ' f"{deep_link}"
+    )
     return ConversationHandler.END
 
 
@@ -162,8 +157,7 @@ if __name__ == "__main__":
     env.read_env()
 
     logging.basicConfig(
-        format="%(levelname)s: %(asctime)s - %(name)s - %(message)s",
-        level=logging.INFO
+        format="%(levelname)s: %(asctime)s - %(name)s - %(message)s", level=logging.INFO
     )
 
     create_button_text = "Создать игру"
@@ -177,33 +171,44 @@ if __name__ == "__main__":
         states={
             # статусы
             TITLE: [
-                MessageHandler(Filters.regex(create_button_text),
-                               game_title_handler,
-                               pass_user_data=True)
+                MessageHandler(
+                    Filters.regex(create_button_text),
+                    game_title_handler,
+                    pass_user_data=True,
+                )
             ],
             BUDGET: [
-                MessageHandler(Filters.text ^ Filters.command,
-                               budget_handler,
-                               pass_user_data=True)
+                MessageHandler(
+                    Filters.text ^ Filters.command, budget_handler, pass_user_data=True
+                )
             ],
             DEADLINE: [
-                MessageHandler(Filters.regex(f"^({BUDGET_OPTIONS[0]}|"
-                                             f"{BUDGET_OPTIONS[1]}|"
-                                             f"{BUDGET_OPTIONS[2]}|"
-                                             f"{BUDGET_OPTIONS[3]})$"),
-                               deadline_handler,
-                               pass_user_data=True)
+                MessageHandler(
+                    Filters.regex(
+                        f"^({BUDGET_OPTIONS[0]}|"
+                        f"{BUDGET_OPTIONS[1]}|"
+                        f"{BUDGET_OPTIONS[2]}|"
+                        f"{BUDGET_OPTIONS[3]})$"
+                    ),
+                    deadline_handler,
+                    pass_user_data=True,
+                )
             ],
             SEND_DATE: [
-                MessageHandler(Filters.regex(f"^({DEADLINE_OPTIONS[0]}|"
-                                             f"{DEADLINE_OPTIONS[1]})$"),
-                               send_date_handler,
-                               pass_user_data=True)
+                MessageHandler(
+                    Filters.regex(
+                        f"^({DEADLINE_OPTIONS[0]}|" f"{DEADLINE_OPTIONS[1]})$"
+                    ),
+                    send_date_handler,
+                    pass_user_data=True,
+                )
             ],
             FINISH: [
-                MessageHandler(Filters.regex(regex_for_date) | Filters.command,
-                               finish_handler,
-                               pass_user_data=True)
+                MessageHandler(
+                    Filters.regex(regex_for_date) | Filters.command,
+                    finish_handler,
+                    pass_user_data=True,
+                )
             ],
         },
         fallbacks=[CommandHandler("cancel", cancel)],

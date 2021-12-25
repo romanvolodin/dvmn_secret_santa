@@ -37,7 +37,9 @@ def add_game(context_data):
     else:
         admin_id = 1
 
-    game_link_id = "Temporaly empty"  # Тут будет каким-то образом формироваться "ссылка"
+    game_link_id = (
+        "Temporaly empty"  # Тут будет каким-то образом формироваться "ссылка"
+    )
 
     try:
         User.get(User.id == context_data["user_id"])
