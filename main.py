@@ -41,6 +41,7 @@ def start(update: Update, context: CallbackContext):
             f"Замечательно, ты собираешься участвовать в игре '{game.title}'\n",
             reply_markup=reply_markup,
         )
+        return
 
     reply_markup = ReplyKeyboardMarkup(
         keyboard=[[KeyboardButton(text=create_button_text)]]
