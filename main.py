@@ -22,6 +22,8 @@ from telegram.utils import helpers
 from models import Game, User, GameAdmin
 
 
+GET_TITLE, GET_BUDGET, GET_DEADLINE, GET_SEND_DATE, GET_FINISH = range(5)
+create_button_text = "Создать игру"
 BUDGET_OPTIONS = ["Нет", "до 500 руб", "500-1000 руб", "1000-2000 руб"]
 DEADLINE_OPTIONS = ["до 25.12.2021", "до 31.12.2021"]
 regex_for_date = r"\d{1,2}.\d{1,2}.2022"
@@ -143,7 +145,7 @@ def cancel(update: Update, context: CallbackContext) -> int:
     return ConversationHandler.END
 
 
-if __name__ == "__main__":
+def main():
     env = Env()
     env.read_env()
 
@@ -151,9 +153,6 @@ if __name__ == "__main__":
         format="%(levelname)s: %(asctime)s - %(name)s - %(message)s", level=logging.INFO
     )
 
-    create_button_text = "Создать игру"
-
-    GET_TITLE, GET_BUDGET, GET_DEADLINE, GET_SEND_DATE, GET_FINISH = range(5)
     conv_handler = ConversationHandler(
         entry_points=[CommandHandler("start", start)],
         states={
@@ -208,3 +207,7 @@ if __name__ == "__main__":
 
     updater.start_polling()
     updater.idle()
+
+
+if __name__ == "__main__":
+    main()
