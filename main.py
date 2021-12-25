@@ -19,6 +19,7 @@ from telegram.ext import (
 )
 from telegram.utils import helpers
 
+from db_helpers import create_db
 from models import Game, User, GameAdmin
 
 
@@ -210,4 +211,5 @@ def main():
 
 
 if __name__ == "__main__":
+    create_db()
     main()
