@@ -20,8 +20,8 @@ from telegram.ext import (
 from telegram.utils import helpers
 
 from db_helpers import create_db
+from handlers import member
 from models import Game, User, GameAdmin
-
 
 GET_TITLE, GET_BUDGET, GET_DEADLINE, GET_SEND_DATE, GET_FINISH = range(5)
 create_button_text = "Создать игру"
@@ -42,12 +42,23 @@ def start(update: Update, context: CallbackContext):
                 "Не расстраивайтесь, создайте новую игру."
             )
         if game:
+            # TODO: Нужна обработка случая, когда чел уже зареган в игре
+            reply_markup = ReplyKeyboardMarkup(
+                keyboard=[
+                    [KeyboardButton(text=member.button_accept)],
+                    [KeyboardButton(text=member.button_cancel)],
+                ]
+            )
             context.user_data["game_id"] = context.args[0]
+            context.user_data["current_game"] = game
             update.message.reply_text(
-                f"Замечательно, ты собираешься участвовать в игре '{game.title}'\n",
+                text=f"Замечательно, ты собираешься участвовать в игре {game.title},\n"
+                f"ограничение стоимости подарка: {game.budget},\n"
+                f"период регистрации: {game.deadline},\n"
+                f"дата отправки подарков: {game.gift_send_date}",
                 reply_markup=reply_markup,
             )
-            return
+            return member.NAME
 
     reply_markup = ReplyKeyboardMarkup(
         keyboard=[[KeyboardButton(text=create_button_text)]]
@@ -207,6 +218,48 @@ def main():
                 MessageHandler(
                     Filters.regex(regex_for_date) | Filters.command,
                     finish_handler,
+                    pass_user_data=True,
+                )
+            ],
+            member.NAME: [
+                MessageHandler(
+                    Filters.regex(f"^({member.button_accept}|{member.button_cancel})$"),
+                    member.username_handler,
+                    pass_user_data=True,
+                )
+            ],
+            member.EMAIL: [
+                MessageHandler(
+                    Filters.text ^ Filters.command,
+                    member.email_handler,
+                    pass_user_data=True,
+                )
+            ],
+            member.WISHLIST: [
+                MessageHandler(
+                    Filters.regex(member.regex_for_email) ^ Filters.command,
+                    member.wishlist_handler,
+                    pass_user_data=True,
+                )
+            ],
+            member.INTERESTS: [
+                MessageHandler(
+                    Filters.text ^ Filters.command,
+                    member.interests_handler,
+                    pass_user_data=True,
+                )
+            ],
+            member.LETTER: [
+                MessageHandler(
+                    Filters.text ^ Filters.command,
+                    member.letter_handler,
+                    pass_user_data=True,
+                )
+            ],
+            member.FINISH: [
+                MessageHandler(
+                    Filters.text ^ Filters.command,
+                    member.finish_handler,
                     pass_user_data=True,
                 )
             ],
