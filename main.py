@@ -133,7 +133,7 @@ def finish_handler(update: Update, context: CallbackContext):
     )
     update.message.reply_text("Отлично, Тайный Санта уже готовится к раздаче подарков!")
     update.message.reply_text(
-        f'Ссылка для регистрации в игре "{game_title}": ' f"{deep_link}"
+        f'Ссылка для регистрации в игре "{game_title}": {deep_link}'
     )
     return ConversationHandler.END
 
