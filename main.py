@@ -31,6 +31,17 @@ regex_for_date = r"\d{1,2}.\d{1,2}.2022"
 
 
 def start(update: Update, context: CallbackContext):
+    if context.args:
+        context.user_data["game_id"] = context.args[0]
+        reply_markup = ReplyKeyboardMarkup(
+            keyboard=[[KeyboardButton(text="Регистрация")]]
+        )
+        game = Game.get(Game.game_link_id == context.args[0])
+        update.message.reply_text(
+            f"Замечательно, ты собираешься участвовать в игре '{game.title}'\n",
+            reply_markup=reply_markup,
+        )
+
     reply_markup = ReplyKeyboardMarkup(
         keyboard=[[KeyboardButton(text=create_button_text)]]
     )
@@ -39,11 +50,6 @@ def start(update: Update, context: CallbackContext):
         reply_markup=reply_markup,
     )
     return GET_TITLE
-
-
-def deep_linked(update: Update, context: CallbackContext) -> None:
-    context.user_data["game_id"] = context.args[0]
-    update.message.reply_text("Замечательно, ты собираешься участвовать в игре ...\n")
 
 
 def game_title_handler(update: Update, context: CallbackContext):
@@ -203,7 +209,6 @@ def main():
 
     updater = Updater(token=env.str("BOT_TOKEN"), use_context=True)
     dispatcher = updater.dispatcher
-    dispatcher.add_handler(CommandHandler("start", deep_linked, Filters.regex(r"\d+")))
     dispatcher.add_handler(conv_handler)
 
     updater.start_polling()
