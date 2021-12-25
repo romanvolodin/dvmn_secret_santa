@@ -35,7 +35,7 @@ def start(update: Update, context: CallbackContext):
         text="Организуй тайный обмен подарками, запусти праздничное настроение!",
         reply_markup=reply_markup,
     )
-    return TITLE  # к какому статусу перейти далее
+    return GET_TITLE
 
 
 def deep_linked(update: Update, context: CallbackContext) -> None:
@@ -47,13 +47,11 @@ def game_title_handler(update: Update, context: CallbackContext):
     update.message.reply_text(
         "Введите название игры:", reply_markup=ReplyKeyboardRemove()
     )
-    return BUDGET  # к какому статусу перейти далее
+    return GET_BUDGET
 
 
 def budget_handler(update: Update, context: CallbackContext):
-    context.user_data[
-        "game_title"
-    ] = update.message.text  # название игры, введенное пользователем
+    context.user_data["game_title"] = update.message.text
     print("Название игры", context.user_data["game_title"])
     reply_markup = ReplyKeyboardMarkup(
         keyboard=[
@@ -71,13 +69,11 @@ def budget_handler(update: Update, context: CallbackContext):
         text="Ограничение стоимости подарка:",
         reply_markup=reply_markup,
     )
-    return DEADLINE  # к какому статусу перейти далее
+    return GET_DEADLINE
 
 
 def deadline_handler(update: Update, context: CallbackContext):
-    context.user_data[
-        "budget"
-    ] = update.message.text  # стоимость, введенная пользователем
+    context.user_data["budget"] = update.message.text
     print("Стоимость подарка", context.user_data["budget"])
     reply_markup = ReplyKeyboardMarkup(
         keyboard=[
@@ -91,7 +87,7 @@ def deadline_handler(update: Update, context: CallbackContext):
         text="Период регистрации участников:",
         reply_markup=reply_markup,
     )
-    return SEND_DATE
+    return GET_SEND_DATE
 
 
 def send_date_handler(update: Update, context: CallbackContext):
@@ -105,7 +101,7 @@ def send_date_handler(update: Update, context: CallbackContext):
         text="Дата отправки подарка (например 15.01.2022):",
         reply_markup=ReplyKeyboardRemove(),
     )
-    return FINISH
+    return GET_FINISH
 
 
 def finish_handler(update: Update, context: CallbackContext):
@@ -117,7 +113,7 @@ def finish_handler(update: Update, context: CallbackContext):
         update.message.reply_text(
             text="Упс. Что-то пошло не так. Введите дату в формате 15.01.2022:"
         )
-        return FINISH
+        return GET_FINISH
     print("Отправка", context.user_data["send_date"])
     print(context.user_data)
 
@@ -162,27 +158,23 @@ if __name__ == "__main__":
 
     create_button_text = "Создать игру"
 
-    # статусы
-    TITLE, BUDGET, DEADLINE, SEND_DATE, FINISH = range(5)
+    GET_TITLE, GET_BUDGET, GET_DEADLINE, GET_SEND_DATE, GET_FINISH = range(5)
     conv_handler = ConversationHandler(
-        entry_points=[
-            CommandHandler("start", start)
-        ],  # выдается на старте при вводе /start
+        entry_points=[CommandHandler("start", start)],
         states={
-            # статусы
-            TITLE: [
+            GET_TITLE: [
                 MessageHandler(
                     Filters.regex(create_button_text),
                     game_title_handler,
                     pass_user_data=True,
                 )
             ],
-            BUDGET: [
+            GET_BUDGET: [
                 MessageHandler(
                     Filters.text ^ Filters.command, budget_handler, pass_user_data=True
                 )
             ],
-            DEADLINE: [
+            GET_DEADLINE: [
                 MessageHandler(
                     Filters.regex(
                         f"^({BUDGET_OPTIONS[0]}|"
@@ -194,7 +186,7 @@ if __name__ == "__main__":
                     pass_user_data=True,
                 )
             ],
-            SEND_DATE: [
+            GET_SEND_DATE: [
                 MessageHandler(
                     Filters.regex(
                         f"^({DEADLINE_OPTIONS[0]}|" f"{DEADLINE_OPTIONS[1]})$"
@@ -203,7 +195,7 @@ if __name__ == "__main__":
                     pass_user_data=True,
                 )
             ],
-            FINISH: [
+            GET_FINISH: [
                 MessageHandler(
                     Filters.regex(regex_for_date) | Filters.command,
                     finish_handler,
@@ -219,5 +211,5 @@ if __name__ == "__main__":
     dispatcher.add_handler(CommandHandler("start", deep_linked, Filters.regex(r"\d+")))
     dispatcher.add_handler(conv_handler)
 
-    updater.start_polling()  # Запуск бота
+    updater.start_polling()
     updater.idle()
