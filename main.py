@@ -1,13 +1,10 @@
-import datetime as dt
 import logging
-import uuid
 
 from environs import Env
 from telegram import (
     Update,
     ReplyKeyboardMarkup,
     KeyboardButton,
-    ReplyKeyboardRemove,
 )
 from telegram.ext import (
     Updater,
@@ -17,17 +14,11 @@ from telegram.ext import (
     Filters,
     ConversationHandler,
 )
-from telegram.utils import helpers
 
 from db_helpers import create_db
 from handlers import member
-from models import Game, User, GameAdmin
-
-GET_TITLE, GET_BUDGET, GET_DEADLINE, GET_SEND_DATE, GET_FINISH = range(5)
-create_button_text = "Создать игру"
-BUDGET_OPTIONS = ["Нет", "до 500 руб", "500-1000 руб", "1000-2000 руб"]
-DEADLINE_OPTIONS = ["до 25.12.2021", "до 31.12.2021"]
-regex_for_date = r"\d{1,2}.\d{1,2}.2022"
+from handlers import game as gm
+from models import Game
 
 
 def start(update: Update, context: CallbackContext):
@@ -61,113 +52,13 @@ def start(update: Update, context: CallbackContext):
             return member.NAME
 
     reply_markup = ReplyKeyboardMarkup(
-        keyboard=[[KeyboardButton(text=create_button_text)]]
+        keyboard=[[KeyboardButton(text=gm.create_button_text)]]
     )
     update.message.reply_text(
         text="Организуй тайный обмен подарками, запусти праздничное настроение!",
         reply_markup=reply_markup,
     )
-    return GET_TITLE
-
-
-def game_title_handler(update: Update, context: CallbackContext):
-    update.message.reply_text(
-        "Введите название игры:", reply_markup=ReplyKeyboardRemove()
-    )
-    return GET_BUDGET
-
-
-def budget_handler(update: Update, context: CallbackContext):
-    context.user_data["game_title"] = update.message.text
-    reply_markup = ReplyKeyboardMarkup(
-        keyboard=[
-            [
-                KeyboardButton(text=BUDGET_OPTIONS[0]),
-                KeyboardButton(text=BUDGET_OPTIONS[1]),
-            ],
-            [
-                KeyboardButton(text=BUDGET_OPTIONS[2]),
-                KeyboardButton(text=BUDGET_OPTIONS[3]),
-            ],
-        ]
-    )
-    update.message.reply_text(
-        text="Ограничение стоимости подарка:",
-        reply_markup=reply_markup,
-    )
-    return GET_DEADLINE
-
-
-def deadline_handler(update: Update, context: CallbackContext):
-    context.user_data["budget"] = update.message.text
-    reply_markup = ReplyKeyboardMarkup(
-        keyboard=[
-            [
-                KeyboardButton(text=DEADLINE_OPTIONS[0]),
-                KeyboardButton(text=DEADLINE_OPTIONS[1]),
-            ]
-        ]
-    )
-    update.message.reply_text(
-        text="Период регистрации участников:",
-        reply_markup=reply_markup,
-    )
-    return GET_SEND_DATE
-
-
-def send_date_handler(update: Update, context: CallbackContext):
-    if update.message.text == DEADLINE_OPTIONS[0]:
-        context.user_data["deadline"] = dt.datetime(2021, 12, 25, hour=12)
-    else:
-        context.user_data["deadline"] = dt.datetime(2021, 12, 31, hour=12)
-
-    update.message.reply_text(
-        text="Дата отправки подарка (например 15.01.2022):",
-        reply_markup=ReplyKeyboardRemove(),
-    )
-    return GET_FINISH
-
-
-def finish_handler(update: Update, context: CallbackContext):
-    try:
-        context.user_data["send_date"] = dt.datetime.strptime(
-            update.message.text, "%d.%m.%Y"
-        )
-    except ValueError:
-        update.message.reply_text(
-            text="Упс. Что-то пошло не так. Введите дату в формате 15.01.2022:"
-        )
-        return GET_FINISH
-
-    user, is_created = User.get_or_create(id=update.message.from_user.id)
-    bot = context.bot
-    deep_link_payload = str(uuid.uuid4())[:8]
-    deep_link = helpers.create_deep_linked_url(bot.username, deep_link_payload)
-
-    game_title = context.user_data["game_title"]
-
-    game = Game.create(
-        game_link_id=deep_link_payload,
-        title=game_title,
-        budget=context.user_data["budget"],
-        deadline=context.user_data["deadline"],
-        gift_send_date=context.user_data["send_date"],
-        created_by=user,
-    )
-    GameAdmin.create(
-        user=user,
-        game=game,
-    )
-    update.message.reply_text("Отлично, Тайный Санта уже готовится к раздаче подарков!")
-    update.message.reply_text(
-        f'Ссылка для регистрации в игре "{game_title}": {deep_link}'
-    )
-    return ConversationHandler.END
-
-
-def cancel(update: Update, context: CallbackContext) -> int:
-    update.message.reply_text("Отмена создания игры")
-    return ConversationHandler.END
+    return gm.GET_TITLE
 
 
 def main():
@@ -181,43 +72,45 @@ def main():
     conv_handler = ConversationHandler(
         entry_points=[CommandHandler("start", start)],
         states={
-            GET_TITLE: [
+            gm.GET_TITLE: [
                 MessageHandler(
-                    Filters.regex(create_button_text),
-                    game_title_handler,
+                    Filters.regex(gm.create_button_text),
+                    gm.game_title_handler,
                     pass_user_data=True,
                 )
             ],
-            GET_BUDGET: [
+            gm.GET_BUDGET: [
                 MessageHandler(
-                    Filters.text ^ Filters.command, budget_handler, pass_user_data=True
+                    Filters.text ^ Filters.command,
+                    gm.budget_handler,
+                    pass_user_data=True,
                 )
             ],
-            GET_DEADLINE: [
+            gm.GET_DEADLINE: [
                 MessageHandler(
                     Filters.regex(
-                        f"^({BUDGET_OPTIONS[0]}|"
-                        f"{BUDGET_OPTIONS[1]}|"
-                        f"{BUDGET_OPTIONS[2]}|"
-                        f"{BUDGET_OPTIONS[3]})$"
+                        f"^({gm.BUDGET_OPTIONS[0]}|"
+                        f"{gm.BUDGET_OPTIONS[1]}|"
+                        f"{gm.BUDGET_OPTIONS[2]}|"
+                        f"{gm.BUDGET_OPTIONS[3]})$"
                     ),
-                    deadline_handler,
+                    gm.deadline_handler,
                     pass_user_data=True,
                 )
             ],
-            GET_SEND_DATE: [
+            gm.GET_SEND_DATE: [
                 MessageHandler(
                     Filters.regex(
-                        f"^({DEADLINE_OPTIONS[0]}|" f"{DEADLINE_OPTIONS[1]})$"
+                        f"^({gm.DEADLINE_OPTIONS[0]}|" f"{gm.DEADLINE_OPTIONS[1]})$"
                     ),
-                    send_date_handler,
+                    gm.send_date_handler,
                     pass_user_data=True,
                 )
             ],
-            GET_FINISH: [
+            gm.GET_FINISH: [
                 MessageHandler(
-                    Filters.regex(regex_for_date) | Filters.command,
-                    finish_handler,
+                    Filters.regex(gm.regex_for_date) | Filters.command,
+                    gm.finish_handler,
                     pass_user_data=True,
                 )
             ],
@@ -264,7 +157,7 @@ def main():
                 )
             ],
         },
-        fallbacks=[CommandHandler("cancel", cancel)],
+        fallbacks=[CommandHandler("cancel", gm.cancel)],
     )
 
     updater = Updater(token=env.str("BOT_TOKEN"), use_context=True)
