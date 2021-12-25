@@ -52,7 +52,6 @@ def game_title_handler(update: Update, context: CallbackContext):
 
 def budget_handler(update: Update, context: CallbackContext):
     context.user_data["game_title"] = update.message.text
-    print("Название игры", context.user_data["game_title"])
     reply_markup = ReplyKeyboardMarkup(
         keyboard=[
             [
@@ -74,7 +73,6 @@ def budget_handler(update: Update, context: CallbackContext):
 
 def deadline_handler(update: Update, context: CallbackContext):
     context.user_data["budget"] = update.message.text
-    print("Стоимость подарка", context.user_data["budget"])
     reply_markup = ReplyKeyboardMarkup(
         keyboard=[
             [
@@ -95,7 +93,6 @@ def send_date_handler(update: Update, context: CallbackContext):
         context.user_data["deadline"] = dt.datetime(2021, 12, 25, hour=12)
     else:
         context.user_data["deadline"] = dt.datetime(2021, 12, 31, hour=12)
-    print("Дедлайн", context.user_data["deadline"])
 
     update.message.reply_text(
         text="Дата отправки подарка (например 15.01.2022):",
@@ -114,8 +111,6 @@ def finish_handler(update: Update, context: CallbackContext):
             text="Упс. Что-то пошло не так. Введите дату в формате 15.01.2022:"
         )
         return GET_FINISH
-    print("Отправка", context.user_data["send_date"])
-    print(context.user_data)
 
     user, is_created = User.get_or_create(id=update.message.from_user.id)
     bot = context.bot
