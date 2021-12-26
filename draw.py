@@ -4,10 +4,7 @@ import random
 import telegram
 
 from environs import Env
-from models import GameMember, Match, Game, User
-
-
-draw_error_msg = "В игре слишком мало участников для проведения жеребьевки"
+from models import GameMember, Match, Game, User, GameAdmin
 
 
 def draw(users, game_id):
@@ -35,7 +32,7 @@ def automatic_draw():
             if draw(users_ids, game.id):
                 send_contacts(game.id)
             else:
-                return draw_error_msg
+                send_error_msg(game.id)
 
 
 def manual_draw(game_link_id):
@@ -45,7 +42,7 @@ def manual_draw(game_link_id):
     if draw(users_ids, game_id):
         send_contacts(game_id)
     else:
-        return draw_error_msg
+        send_error_msg(game_id)
 
 
 def send_contacts(game_id):
@@ -61,7 +58,7 @@ def send_contacts(game_id):
 def create_msg(recipient_id, game):
     recipient = User.get_by_id(recipient_id)
     text = (
-        f"Жеребьевка в игре “{game.title}” проведена! Спешу сообщить кто тебе выпал:\n"
+        f"🎉 Жеребьевка в игре “{game.title}” проведена! Спешу сообщить кто тебе выпал:\n"
         f"• Имя получателя: {recipient.name}\n"
         f"• Email: {recipient.email}\n"
         f"• Пожелания: {recipient.wishlist}\n"
@@ -74,10 +71,17 @@ def create_msg(recipient_id, game):
     return text
 
 
+def send_error_msg(game_id):
+    game = Game.get(Game.id == game_id)
+    admin_id = GameAdmin.get_by_id(game_id).user_id
+    draw_error_msg = (
+        f"🥺 К сожалению, в игре “{game.title}“ слишком мало "
+        f"участников для проведения жеребьевки"
+    )
+    bot.sendMessage(chat_id=admin_id, text=draw_error_msg)
+
+
 if __name__ == "__main__":
     env = Env()
     env.read_env()
     bot = telegram.Bot(token=env.str("BOT_TOKEN"))
-
-    #  если число участников в игре менее 2, manual_draw() и automatic_draw()
-    #  жеребьевку не проводят и возвращают сообщение об ошибке
