@@ -161,7 +161,6 @@ def edit_game(update: Update, context: CallbackContext):
         f"Что изменить?",
         reply_markup=reply_markup,
     )
-    # updater.dispatcher.add_handler(CallbackQueryHandler(handle_game_edit))
 
 
 def handle_game_edit(update: Update, context: CallbackContext):
