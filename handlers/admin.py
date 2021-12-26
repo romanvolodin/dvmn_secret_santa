@@ -127,7 +127,7 @@ def ask_for_draw(update: Update, context: CallbackContext):
     game = get_game_by_id(context.user_data["current_game_id"])
     reply_markup = InlineKeyboardMarkup(
         [
-            [InlineKeyboardButton("Провести жеребьевку", callback_data="draw_yes")],
+            [InlineKeyboardButton("Провести жеребьевку", callback_data="make_draw")],
         ]
     )
     query.message.reply_text(
@@ -310,7 +310,7 @@ if __name__ == "__main__":
     dispatcher.add_handler(CallbackQueryHandler(show_members, pattern="^members$"))
     dispatcher.add_handler(CallbackQueryHandler(edit_game, pattern="^edit$"))
     dispatcher.add_handler(CallbackQueryHandler(ask_for_draw, pattern="^draw$"))
-    dispatcher.add_handler(CallbackQueryHandler(make_draw, pattern="^draw_yes$"))
+    dispatcher.add_handler(CallbackQueryHandler(make_draw, pattern="^make_draw$"))
     dispatcher.add_handler(
         CallbackQueryHandler(
             edit_game_deadline,
