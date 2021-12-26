@@ -7,7 +7,12 @@ from environs import Env
 from models import GameMember, Match, Game, User
 
 
+draw_error_msg = "В игре слишком мало участников для проведения жеребьевки"
+
+
 def draw(users, game_id):
+    if len(users) < 2:
+        return False
     random.shuffle(users)
     for i in range(len(users)):
         giver = users[i]
@@ -17,6 +22,7 @@ def draw(users, game_id):
             giver=giver,
             recipient=recipient,
         )
+    return True
 
 
 def automatic_draw():
@@ -26,16 +32,20 @@ def automatic_draw():
         if game.deadline == msk_time:
             users = GameMember.select().where(GameMember.game_id == game.id)
             users_ids = [user.user_id for user in users]
-            draw(users_ids, game.id)
-            send_contacts(game.id)
+            if draw(users_ids, game.id):
+                send_contacts(game.id)
+            else:
+                return draw_error_msg
 
 
 def manual_draw(game_link_id):
     game_id = Game.get(Game.game_link_id == game_link_id)
     users = GameMember.select().where(GameMember.game_id == game_id)
     users_ids = [user.user_id for user in users]
-    draw(users_ids, game_id)
-    send_contacts(game_id)
+    if draw(users_ids, game_id):
+        send_contacts(game_id)
+    else:
+        return draw_error_msg
 
 
 def send_contacts(game_id):
@@ -68,3 +78,6 @@ if __name__ == "__main__":
     env = Env()
     env.read_env()
     bot = telegram.Bot(token=env.str("BOT_TOKEN"))
+
+    #  если число участников в игре менее 2, manual_draw() и automatic_draw()
+    #  жеребьевку не проводят и возвращают сообщение об ошибке
