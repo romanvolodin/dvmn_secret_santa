@@ -216,7 +216,7 @@ conversation_handler = ConversationHandler(
             MessageHandler(
                 Filters.regex("^Посмотреть игры$"), member.show_games_handler
             ),
-            MessageHandler(Filters.regex("^Создать игру$"), member.create_game_handler),
+            MessageHandler(Filters.regex("^Создать игру$"), gm.game_title_handler),
             MessageHandler(
                 Filters.regex("^Поменять регистрационные данные$"),
                 member.change_data_choice_handler,
@@ -246,7 +246,7 @@ conversation_handler = ConversationHandler(
             MessageHandler(Filters.regex("^Посмотреть, где участвую$"), admin.show_participating_in_games_handler),
             MessageHandler(
                 Filters.regex("^Создать новую игру$"),
-                member.create_game_handler,
+                gm.game_title_handler,
             ),
             MessageHandler(
                 Filters.regex("^Поменять данные$"),
