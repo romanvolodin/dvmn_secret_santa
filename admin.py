@@ -21,13 +21,13 @@ from draw import manual_draw
 from handlers.game import BUDGET_OPTIONS, DEADLINE_OPTIONS, regex_for_date
 
 
-admin_id = 802604339
 button_cancel = "Отмена"
 
 
 def games(update: Update, context: CallbackContext):
+    effective_user_id = update.effective_user.id
     bot = context.bot
-    admins_games = Game.select().where(Game.created_by == admin_id)
+    admins_games = Game.select().where(Game.created_by == effective_user_id)
     games_id_titles = [(game.game_link_id, game.title) for game in admins_games]
 
     keyboard = []
@@ -82,7 +82,7 @@ def show_members(update: Update, context: CallbackContext):
         "Например: /delete 15"
     )
     dispatcher.add_handler(
-        CommandHandler("delete", call_delete_member, Filters.user(user_id=admin_id))
+        CommandHandler("delete", call_delete_member, Filters.user(user_ids))
     )
 
 
@@ -287,11 +287,15 @@ if __name__ == "__main__":
         format="%(levelname)s: %(asctime)s - %(name)s - %(message)s", level=logging.INFO
     )
 
+    admins = GameAdmin.select()
+    admins_ids = [admin.user_id for admin in admins]
+    user_ids = set(admins_ids)
+
     updater = Updater(token=env.str("BOT_TOKEN"), use_context=True)
     dispatcher = updater.dispatcher
 
     dispatcher.add_handler(
-        CommandHandler("games", games, Filters.user(user_id=admin_id))
+        CommandHandler("games", games, Filters.user(user_ids))
     )
     dispatcher.add_handler(CallbackQueryHandler(show_game, pattern="^[a-z0-9]{8}$"))
     dispatcher.add_handler(CallbackQueryHandler(show_members, pattern="^members$"))
