@@ -21,7 +21,7 @@ from draw import manual_draw
 from handlers.game import BUDGET_OPTIONS, DEADLINE_OPTIONS, regex_for_date
 
 
-admin_id = "id админа игр"
+admin_id = 802604339
 button_cancel = "Отмена"
 
 
@@ -161,6 +161,7 @@ def edit_game(update: Update, context: CallbackContext):
         f"Что изменить?",
         reply_markup=reply_markup,
     )
+    updater.dispatcher.add_handler(CallbackQueryHandler(handle_game_edit))
 
 
 def handle_game_edit(update: Update, context: CallbackContext):
@@ -307,7 +308,7 @@ if __name__ == "__main__":
         CallbackQueryHandler(
             edit_game_budget,
             pattern=f"^{BUDGET_OPTIONS[0]}|{BUDGET_OPTIONS[1]}|"
-            f"{BUDGET_OPTIONS[2]}|{BUDGET_OPTIONS[0]}$",
+            f"{BUDGET_OPTIONS[2]}|{BUDGET_OPTIONS[3]}$",
         )
     )
 
