@@ -10,6 +10,7 @@ from telegram.ext import (
     ConversationHandler,
 )
 from handlers import game as gm
+from handlers import admin
 from models import User, GameMember
 
 
@@ -175,17 +176,30 @@ def change_nothing_handler(update: Update, context: CallbackContext):
         reply = "Изменения сохранены (возможно)"
     else:
         reply = "Что вы хотите?"
-    update.message.reply_text(
-        reply,
-        reply_markup=ReplyKeyboardMarkup(
-            [
-                ["Посмотреть игры", "Создать игру"],
-                ["Поменять регистрационные данные"],
-            ],
-            resize_keyboard=True,
-        ),
-    )
-    return INITIAL_CHOICE
+    if context.user_data["is_admin"]:
+        update.message.reply_text(
+            reply,
+            reply_markup=ReplyKeyboardMarkup(
+                [
+                    ["Посмотреть созданные", "Посмотреть, где участвую"],
+                    ["Создать новую игру", "Поменять данные"],
+                ],
+                resize_keyboard=True,
+            ),
+        )
+        return admin.INITIAL_CHOICE        
+    else:
+        update.message.reply_text(
+            reply,
+            reply_markup=ReplyKeyboardMarkup(
+                [
+                    ["Посмотреть игры", "Создать игру"],
+                    ["Поменять регистрационные данные"],
+                ],
+                resize_keyboard=True,
+            ),
+        )
+        return INITIAL_CHOICE
 
 
 def get_new_data_handler(update: Update, context: CallbackContext):

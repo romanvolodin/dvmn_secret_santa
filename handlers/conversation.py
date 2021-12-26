@@ -11,12 +11,17 @@ from telegram.ext import (
     ConversationHandler,
 )
 
-from handlers import member
+from handlers import member, admin
 from handlers import game as gm
-from models import Game, GameMember
+from models import Game, GameMember, GameAdmin
 
 
 def start(update: Update, context: CallbackContext):
+    admin_in_db = (
+        GameAdmin.select()
+        .where(GameAdmin.user_id == update.message.from_user.id)
+        .get_or_none()
+    )
     member_in_db = (
         GameMember.select()
         .where(GameMember.user_id == update.message.from_user.id)
@@ -83,7 +88,21 @@ def start(update: Update, context: CallbackContext):
                     reply_markup=reply_markup,
                 )
                 return member.NAME
+    elif admin_in_db:
+        context.user_data["is_admin"] = True
+        update.message.reply_text(
+            "Вы создали N игр и участвуете в M играх.",
+            reply_markup=ReplyKeyboardMarkup(
+                [
+                    ["Посмотреть созданные", "Посмотреть, где участвую"],
+                    ["Создать новую игру", "Поменять данные"],
+                ],
+                resize_keyboard=True,
+            ),
+        )
+        return admin.INITIAL_CHOICE        
     elif member_in_db:
+        context.user_data["is_admin"] = False
         update.message.reply_text(
             "Вы участвуете в N играх",
             reply_markup=ReplyKeyboardMarkup(
@@ -219,6 +238,20 @@ conversation_handler = ConversationHandler(
                 member.add_user_to_game_handler,
                 pass_user_data=True,
             )
+        ],
+        admin.INITIAL_CHOICE: [
+            MessageHandler(
+                Filters.regex("^Посмотреть созданные$"), admin.show_created_games_handler
+            ),
+            MessageHandler(Filters.regex("^Посмотреть, где участвую$"), admin.show_participating_in_games_handler),
+            MessageHandler(
+                Filters.regex("^Создать новую игру$"),
+                member.create_game_handler,
+            ),
+            MessageHandler(
+                Filters.regex("^Поменять данные$"),
+                member.change_data_choice_handler,
+            ),
         ],
     },
     fallbacks=[CommandHandler("cancel", gm.cancel)],
