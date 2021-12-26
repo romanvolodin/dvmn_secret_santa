@@ -33,23 +33,56 @@ def start(update: Update, context: CallbackContext):
                 "Не расстраивайтесь, создайте новую игру."
             )
         if game:
-            # TODO: Нужна обработка случая, когда чел уже зареган в игре
-            reply_markup = ReplyKeyboardMarkup(
-                keyboard=[
-                    [KeyboardButton(text=member.button_accept)],
-                    [KeyboardButton(text=member.button_cancel)],
-                ]
-            )
-            context.user_data["game_id"] = context.args[0]
-            context.user_data["current_game"] = game
-            update.message.reply_text(
-                text=f"Замечательно, ты собираешься участвовать в игре “{game.title}“:\n"
-                f"• ограничение стоимости подарка: {game.budget},\n"
-                f"• период регистрации: до {game.deadline.strftime('%d.%m.%Y, %H:%M(МСК)')},\n"
-                f"• дата отправки подарков: {game.gift_send_date.strftime('%d.%m.%Y')}",
-                reply_markup=reply_markup,
-            )
-            return member.NAME
+            if member_in_db:
+                member_in_game = (
+                    GameMember.select()
+                    .where(GameMember.game_id == game.id)
+                    .get_or_none()
+                )
+                if member_in_game:
+                    update.message.reply_text(
+                        "Вы уже в игре!\n",
+                        reply_markup=ReplyKeyboardMarkup(
+                            [
+                                ["Посмотреть игры", "Создать игру"],
+                                ["Поменять регистрационные данные"],
+                            ],
+                            resize_keyboard=True,
+                        ),
+                    )
+                    return member.INITIAL_CHOICE
+                else:
+                    reply_markup = ReplyKeyboardMarkup(
+                        keyboard=[
+                            [KeyboardButton(text=member.button_accept)],
+                            [KeyboardButton(text=member.button_cancel)],
+                        ]
+                    )
+                    context.user_data["current_game"] = game
+                    update.message.reply_text(
+                        text=f"Замечательно, ты собираешься участвовать в игре “{game.title}“:\n"
+                        f"• ограничение стоимости подарка: {game.budget},\n"
+                        f"• период регистрации: до {game.deadline.strftime('%d.%m.%Y, %H:%M(МСК)')},\n"
+                        f"• дата отправки подарков: {game.gift_send_date.strftime('%d.%m.%Y')}",
+                        reply_markup=reply_markup,
+                    )
+                    return member.ADD_EXISTED_USER_TO_GAME
+            else:
+                reply_markup = ReplyKeyboardMarkup(
+                    keyboard=[
+                        [KeyboardButton(text=member.button_accept)],
+                        [KeyboardButton(text=member.button_cancel)],
+                    ]
+                )
+                context.user_data["current_game"] = game
+                update.message.reply_text(
+                    text=f"Замечательно, ты собираешься участвовать в игре “{game.title}“:\n"
+                    f"• ограничение стоимости подарка: {game.budget},\n"
+                    f"• период регистрации: до {game.deadline.strftime('%d.%m.%Y, %H:%M(МСК)')},\n"
+                    f"• дата отправки подарков: {game.gift_send_date.strftime('%d.%m.%Y')}",
+                    reply_markup=reply_markup,
+                )
+                return member.NAME
     elif member_in_db:
         update.message.reply_text(
             "Вы участвуете в N играх",
@@ -179,6 +212,13 @@ conversation_handler = ConversationHandler(
         ],
         member.GET_NEW_DATA: [
             MessageHandler(Filters.text, member.get_new_data_handler),
+        ],
+        member.ADD_EXISTED_USER_TO_GAME: [
+            MessageHandler(
+                Filters.regex(f"^({member.button_accept}|{member.button_cancel})$"),
+                member.add_user_to_game_handler,
+                pass_user_data=True,
+            )
         ],
     },
     fallbacks=[CommandHandler("cancel", gm.cancel)],

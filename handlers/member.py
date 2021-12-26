@@ -14,7 +14,9 @@ from models import User, GameMember
 
 
 NAME, EMAIL, WISHLIST, INTERESTS, LETTER, FINISH = range(5, 11)
-INITIAL_CHOICE, CHANGE_DATA_CHOICE, GET_NEW_DATA = range(12, 15)
+INITIAL_CHOICE, CHANGE_DATA_CHOICE, GET_NEW_DATA, ADD_EXISTED_USER_TO_GAME = range(
+    12, 16
+)
 button_accept = "Участвовать"
 button_cancel = "Отмена"
 regex_for_email = r"\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b"
@@ -230,4 +232,28 @@ def get_new_data_handler(update: Update, context: CallbackContext):
 
 def cancel(update: Update, context: CallbackContext) -> int:
     update.message.reply_text("Отмена регистрации")
+    return ConversationHandler.END
+
+
+def add_user_to_game_handler(update: Update, context: CallbackContext):
+    if update.message.text == button_cancel:
+        update.message.reply_text(
+            text="Регистрация отменена. Для возобновления введите /start",
+            reply_markup=ReplyKeyboardRemove(),
+        )
+        return ConversationHandler.END
+    game = context.user_data["current_game"]
+    update.message.reply_text(
+        "Превосходно, ты в игре!\n"
+        f"{game.deadline.strftime('%d.%m.%Y в %H:%M(МСК)')} мы проведем жеребьевку и ты "
+        "узнаешь имя и контакты своего тайного друга. "
+        "Ему и нужно будет подарить подарок!",
+        reply_markup=ReplyKeyboardRemove(),
+    )
+    user = User.get(User.id == update.message.from_user.id)
+    GameMember.create(
+        user=user,
+        game=game,
+    )
+
     return ConversationHandler.END
