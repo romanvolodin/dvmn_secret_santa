@@ -13,15 +13,20 @@ from telegram.ext import (
 
 from handlers import member
 from handlers import game as gm
-from models import Game
+from models import Game, GameMember
 
 
 def start(update: Update, context: CallbackContext):
+    member_in_db = (
+        GameMember.select()
+        .where(GameMember.user_id == update.message.from_user.id)
+        .get_or_none()
+    )  # Кто-нибудь! Уберите этот ужас...
     if context.args:
         reply_markup = ReplyKeyboardMarkup(
             keyboard=[[KeyboardButton(text="Регистрация")]]
         )
-        game = Game.get_or_none(Game.game_link_id == context.args[0])
+        game = Game.get_or_none(Game.id == context.args[0])
         if game is None:
             update.message.reply_text(
                 f"Игра с id '{context.args[0]}' не найдена.\n"
@@ -45,6 +50,18 @@ def start(update: Update, context: CallbackContext):
                 reply_markup=reply_markup,
             )
             return member.NAME
+    elif member_in_db:
+        update.message.reply_text(
+            "Вы участвуете в N играх",
+            reply_markup=ReplyKeyboardMarkup(
+                [
+                    ["Посмотреть игры", "Создать игру"],
+                    ["Поменять регистрационные данные"],
+                ],
+                resize_keyboard=True,
+            ),
+        )
+        return member.INITIAL_CHOICE
 
     reply_markup = ReplyKeyboardMarkup(
         keyboard=[[KeyboardButton(text=gm.create_button_text)]]
@@ -142,6 +159,26 @@ conversation_handler = ConversationHandler(
                 member.finish_handler,
                 pass_user_data=True,
             )
+        ],
+        member.INITIAL_CHOICE: [
+            MessageHandler(
+                Filters.regex("^Посмотреть игры$"), member.show_games_handler
+            ),
+            MessageHandler(Filters.regex("^Создать игру$"), member.create_game_handler),
+            MessageHandler(
+                Filters.regex("^Поменять регистрационные данные$"),
+                member.change_data_choice_handler,
+            ),
+        ],
+        member.CHANGE_DATA_CHOICE: [
+            MessageHandler(
+                Filters.regex("^Имя$|^email$|^Пожелания$|^Интересы$|^Письмо Санте$"),
+                member.change_data_handler,
+            ),
+            MessageHandler(Filters.regex("^Ничего$"), member.change_nothing_handler),
+        ],
+        member.GET_NEW_DATA: [
+            MessageHandler(Filters.text, member.get_new_data_handler),
         ],
     },
     fallbacks=[CommandHandler("cancel", gm.cancel)],
