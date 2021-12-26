@@ -58,7 +58,7 @@ def show_game(update: Update, context: CallbackContext):
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
     query.message.reply_text(
-        text=f"Что хотите сделать с игрой {game.title}?",
+        text=f"Что хотите сделать с игрой “{game.title}“?",
         reply_markup=reply_markup,
     )
 
@@ -68,7 +68,7 @@ def show_members(update: Update, context: CallbackContext):
     game = get_game_by_id(context.user_data["current_game_id"])
     game_members = GameMember.select().where(GameMember.game_id == game.id)
 
-    query.message.reply_text(f"Участники игры {game.title}:")
+    query.message.reply_text(f"Участники игры “{game.title}“:")
     available_user_ids = []
     for member in game_members:
         user_form = User.get_by_id(member.user_id)
@@ -106,7 +106,7 @@ def call_delete_member(update: Update, context: CallbackContext):
             updater.dispatcher.add_handler(CallbackQueryHandler(delete_member))
         else:
             update.message.reply_text(
-                text=f"Пользователя с id {user_id_to_delete} не найдено в этой игре"
+                text=f"Пользователь с id {user_id_to_delete} не найден в этой игре"
             )
 
 
@@ -126,11 +126,11 @@ def ask_for_draw(update: Update, context: CallbackContext):
     game = get_game_by_id(context.user_data["current_game_id"])
     reply_markup = InlineKeyboardMarkup(
         [
-            [InlineKeyboardButton("Провести жеребьевку", callback_data="make_draw")],
+            [InlineKeyboardButton("Да", callback_data="make_draw")],
         ]
     )
     query.message.reply_text(
-        text=f"Провеcти жеребьевку для игры {game.title}",
+        text=f"Провеcти жеребьевку для игры “{game.title}“ сейчас?",
         reply_markup=reply_markup,
     )
 
@@ -154,7 +154,7 @@ def edit_game(update: Update, context: CallbackContext):
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
     query.message.reply_text(
-        text=f"Изменить игру {game.title}:\n\n"
+        text=f"Изменить игру “{game.title}“:\n\n"
         f"Ограничение стоимости подарка: {game.budget}\n"
         f"Регистрация до: {game.deadline.strftime('%d.%m.%Y, %H:%M(МСК)')}\n"
         f"Дата отправки подарков: {game.gift_send_date.strftime('%d.%m.%Y')}\n\n"
