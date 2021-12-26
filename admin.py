@@ -4,10 +4,6 @@ import logging
 from environs import Env
 from telegram import (
     Update,
-    ReplyKeyboardMarkup,
-    KeyboardButton,
-    ReplyKeyboardRemove,
-    ReplyMarkup,
     InlineKeyboardButton,
     InlineKeyboardMarkup,
 )
@@ -17,17 +13,15 @@ from telegram.ext import (
     CommandHandler,
     MessageHandler,
     Filters,
-    ConversationHandler,
     CallbackQueryHandler,
 )
-from telegram.utils import helpers
 
 from models import GameAdmin, Game, GameMember, User
 from draw import manual_draw
-from handlers.game import DEADLINE_OPTIONS, regex_for_date
+from handlers.game import BUDGET_OPTIONS, DEADLINE_OPTIONS, regex_for_date
 
 
-admin_id = "введите свой id для теста"
+admin_id = "id админа игр"
 button_cancel = "Отмена"
 
 
@@ -35,54 +29,55 @@ def games(update: Update, context: CallbackContext):
     bot = context.bot
     admins_games = Game.select().where(Game.created_by == admin_id)
     games_id_titles = [(game.game_link_id, game.title) for game in admins_games]
-    update.message.reply_text("Игры, в которых вы админ:")
+
+    keyboard = []
     for game_id, game_title in games_id_titles:
-        ### Здесь выдаст ссылку на себя
-        # deep_link = helpers.create_deep_linked_url(bot.username, game_id)
+        keyboard.append([InlineKeyboardButton(game_title, callback_data=game_id)])
 
-        ### Здесь выдаст ссылку на другого бота DvmnSecretSantaAdminBot
-        deep_link = helpers.create_deep_linked_url("DvmnSecretSantaAdminBot", game_id)
-        update.message.reply_text(f"{game_title}: {deep_link}")
+    reply_markup = InlineKeyboardMarkup(keyboard)
+    update.message.reply_text(
+        text=f"Игры, в которых вы админ:",
+        reply_markup=reply_markup,
+    )
 
 
-def start(update: Update, context: CallbackContext):
-    # TODO Добавить инструкцию по командам для пользователя
-    if context.args:
-        context.user_data["current_game_id"] = context.args[0]
-        # Вывести список участников игры
-        dispatcher.add_handler(
-            CommandHandler(
-                "members", show_members, Filters.user(user_id=admin_id), pass_args=True
-            )
-        )
-        # Перейти к ручной жеребьевке
-        dispatcher.add_handler(
-            CommandHandler(
-                "draw", ask_for_draw, Filters.user(user_id=admin_id), pass_args=True
-            )
-        )
-        # Изменить параметры игры
-        dispatcher.add_handler(
-            CommandHandler(
-                "edit", edit_game, Filters.user(user_id=admin_id), pass_args=True
-            )
-        )
+def show_game(update: Update, context: CallbackContext):
+    query = update.callback_query
+    chosen_game_id = query.data
+    game = get_game_by_id(chosen_game_id)
+    context.user_data["current_game_id"] = chosen_game_id
+
+    keyboard = [
+        [
+            InlineKeyboardButton("Показать участников", callback_data="members"),
+            InlineKeyboardButton("Изменить", callback_data="edit"),
+        ],
+        [
+            InlineKeyboardButton("Провести жеребьевку", callback_data="draw"),
+        ],
+    ]
+    reply_markup = InlineKeyboardMarkup(keyboard)
+    query.message.reply_text(
+        text=f"Что хотите сделать с игрой {game.title}?",
+        reply_markup=reply_markup,
+    )
 
 
 def show_members(update: Update, context: CallbackContext):
+    query = update.callback_query
     game = get_game_by_id(context.user_data["current_game_id"])
     game_members = GameMember.select().where(GameMember.game_id == game.id)
 
-    update.message.reply_text(f"Участники игры {game.title}:")
+    query.message.reply_text(f"Участники игры {game.title}:")
     available_user_ids = []
     for member in game_members:
         user_form = User.get_by_id(member.user_id)
-        update.message.reply_text(
+        query.message.reply_text(
             f"id:{member.id}\n" f"{user_form.name}, email: {user_form.email}"
         )
         available_user_ids.append(member.id)
     context.user_data["available_user_ids"] = available_user_ids
-    update.message.reply_text(
+    query.message.reply_text(
         "Чтобы удалить участника введите команду /delete и id участника.\n\n"
         "Например: /delete 15"
     )
@@ -111,7 +106,7 @@ def call_delete_member(update: Update, context: CallbackContext):
             updater.dispatcher.add_handler(CallbackQueryHandler(delete_member))
         else:
             update.message.reply_text(
-                text=f"Пользователя с id {user_id_to_delete} не найдено в базе"
+                text=f"Пользователя с id {user_id_to_delete} не найдено в этой игре"
             )
 
 
@@ -127,29 +122,25 @@ def delete_member(update: Update, context: CallbackContext):
 
 
 def ask_for_draw(update: Update, context: CallbackContext):
+    query = update.callback_query
     game = get_game_by_id(context.user_data["current_game_id"])
     reply_markup = InlineKeyboardMarkup(
         [
-            [InlineKeyboardButton("Провести жеребьевку", callback_data="1")],
-            [InlineKeyboardButton(button_cancel, callback_data="0")],
+            [InlineKeyboardButton("Провести жеребьевку", callback_data="draw_yes")],
         ]
     )
-    update.message.reply_text(
+    query.message.reply_text(
         text=f"Провеcти жеребьевку для игры {game.title}",
         reply_markup=reply_markup,
     )
-    updater.dispatcher.add_handler(CallbackQueryHandler(make_draw))
 
 
 def make_draw(update: Update, context: CallbackContext):
-    callback_query = update.callback_query.data
-    if callback_query == "1":
-        manual_draw(context.user_data["current_game_id"])
-    else:
-        update.message.reply_text(text="Отмена")
+    manual_draw(context.user_data["current_game_id"])
 
 
 def edit_game(update: Update, context: CallbackContext):
+    query = update.callback_query
     game = get_game_by_id(context.user_data["current_game_id"])
     keyboard = [
         [
@@ -157,12 +148,12 @@ def edit_game(update: Update, context: CallbackContext):
             InlineKeyboardButton("Стоимость подарка", callback_data="budget"),
         ],
         [
-            InlineKeyboardButton("Период регистрации", callback_data="deadline"),
+            InlineKeyboardButton("Период регистрации", callback_data="edit_deadline"),
             InlineKeyboardButton("Дату отправки подарка", callback_data="send_date"),
         ],
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
-    update.message.reply_text(
+    query.message.reply_text(
         text=f"Изменить игру {game.title}:\n\n"
         f"Ограничение стоимости подарка: {game.budget}\n"
         f"Регистрация до: {game.deadline.strftime('%d.%m.%Y, %H:%M(МСК)')}\n"
@@ -170,7 +161,7 @@ def edit_game(update: Update, context: CallbackContext):
         f"Что изменить?",
         reply_markup=reply_markup,
     )
-    updater.dispatcher.add_handler(CallbackQueryHandler(handle_game_edit))
+    # updater.dispatcher.add_handler(CallbackQueryHandler(handle_game_edit))
 
 
 def handle_game_edit(update: Update, context: CallbackContext):
@@ -183,25 +174,46 @@ def handle_game_edit(update: Update, context: CallbackContext):
             MessageHandler(Filters.text, edit_game_name, pass_user_data=True)
         )
     elif query_value == "budget":
-        # TODO пока работает только ввод строки без выбора вариантов
-        query.edit_message_text(text=f"Выберите новый бюджет:")
-        updater.dispatcher.add_handler(
-            MessageHandler(Filters.text, edit_game_budget, pass_user_data=True)
-        )
-    elif query_value == "deadline":
         reply_markup = InlineKeyboardMarkup(
             [
                 [
-                    InlineKeyboardButton(DEADLINE_OPTIONS[0], callback_data="first"),
-                    InlineKeyboardButton(DEADLINE_OPTIONS[1], callback_data="second"),
+                    InlineKeyboardButton(
+                        text=BUDGET_OPTIONS[0], callback_data=BUDGET_OPTIONS[0]
+                    ),
+                    InlineKeyboardButton(
+                        text=BUDGET_OPTIONS[1], callback_data=BUDGET_OPTIONS[1]
+                    ),
+                ],
+                [
+                    InlineKeyboardButton(
+                        text=BUDGET_OPTIONS[2], callback_data=BUDGET_OPTIONS[2]
+                    ),
+                    InlineKeyboardButton(
+                        text=BUDGET_OPTIONS[3], callback_data=BUDGET_OPTIONS[3]
+                    ),
+                ],
+            ]
+        )
+        query.edit_message_text(
+            text=f"Выберите новый бюджет:", reply_markup=reply_markup
+        )
+
+    elif query_value == "edit_deadline":
+        reply_markup = InlineKeyboardMarkup(
+            [
+                [
+                    InlineKeyboardButton(
+                        DEADLINE_OPTIONS[0], callback_data=DEADLINE_OPTIONS[0]
+                    ),
+                    InlineKeyboardButton(
+                        DEADLINE_OPTIONS[1], callback_data=DEADLINE_OPTIONS[1]
+                    ),
                 ],
             ]
         )
         query.edit_message_text(
             text=f"Выберите новый период регистрации:", reply_markup=reply_markup
         )
-        # TODO Здесь пока не работает
-        updater.dispatcher.add_handler(CallbackQueryHandler(edit_game_deadline))
 
     elif query_value == "send_date":
         query.edit_message_text(
@@ -223,21 +235,20 @@ def edit_game_name(update: Update, context: CallbackContext):
 
 
 def edit_game_budget(update: Update, context: CallbackContext):
-    # TODO пока работает только ввод строки без выбора вариантов
-    new_budget = update.message.text
+    query = update.callback_query
+    query_value = update.callback_query.data
+
+    new_budget = query_value
     game = get_game_by_id(context.user_data["current_game_id"])
     game.budget = new_budget
     game.save()
-    update.message.reply_text(text="Ок. Стоимость подарка изменена")
+    query.edit_message_text(text="Ок. Стоимость подарка изменена")
 
 
 def edit_game_deadline(update: Update, context: CallbackContext):
-    print(update.message.text)
-    # TODO пока не работает
-    print("Game id", context.user_data["current_game_id"])
     query = update.callback_query
     query_value = update.callback_query.data
-    print("query_value", query_value)
+
     query.answer()
     if query_value == DEADLINE_OPTIONS[0]:
         new_deadline = dt.datetime(2021, 12, 25, hour=12)
@@ -279,13 +290,26 @@ if __name__ == "__main__":
     updater = Updater(token=env.str("BOT_TOKEN"), use_context=True)
     dispatcher = updater.dispatcher
 
-    # Изначально доступны только эти команды. Пользователь вводит /games
-    # Переходит по ссылке в def start() уже с id игры
     dispatcher.add_handler(
         CommandHandler("games", games, Filters.user(user_id=admin_id))
     )
+    dispatcher.add_handler(CallbackQueryHandler(show_game, pattern="^[a-z0-9]{8}$"))
+    dispatcher.add_handler(CallbackQueryHandler(show_members, pattern="^members$"))
+    dispatcher.add_handler(CallbackQueryHandler(edit_game, pattern="^edit$"))
+    dispatcher.add_handler(CallbackQueryHandler(ask_for_draw, pattern="^draw$"))
+    dispatcher.add_handler(CallbackQueryHandler(make_draw, pattern="^draw_yes$"))
     dispatcher.add_handler(
-        CommandHandler("start", start, Filters.user(user_id=admin_id))
+        CallbackQueryHandler(
+            edit_game_deadline,
+            pattern=f"^{DEADLINE_OPTIONS[0]}|" f"{DEADLINE_OPTIONS[1]}$",
+        )
+    )
+    dispatcher.add_handler(
+        CallbackQueryHandler(
+            edit_game_budget,
+            pattern=f"^{BUDGET_OPTIONS[0]}|{BUDGET_OPTIONS[1]}|"
+            f"{BUDGET_OPTIONS[2]}|{BUDGET_OPTIONS[0]}$",
+        )
     )
 
     updater.start_polling()
