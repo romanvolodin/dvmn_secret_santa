@@ -136,7 +136,7 @@ def ask_for_draw(update: Update, context: CallbackContext):
 
 
 def make_draw(update: Update, context: CallbackContext):
-    manual_draw(context.user_data["current_game_id"])
+    manual_draw(context.user_data["current_game_id"], bot_token)
 
 
 def edit_game(update: Update, context: CallbackContext):
@@ -291,7 +291,8 @@ if __name__ == "__main__":
     admins_ids = [admin.user_id for admin in admins]
     user_ids = set(admins_ids)
 
-    updater = Updater(token=env.str("BOT_TOKEN"), use_context=True)
+    bot_token = env.str("BOT_TOKEN")
+    updater = Updater(token=bot_token, use_context=True)
     dispatcher = updater.dispatcher
 
     dispatcher.add_handler(
