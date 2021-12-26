@@ -26,8 +26,8 @@ def start(update: Update, context: CallbackContext):
         reply_markup = ReplyKeyboardMarkup(
             keyboard=[[KeyboardButton(text="Регистрация")]]
         )
-        game = Game.get_or_none(Game.id == context.args[0])
-        if game is None:
+        game = Game.get_or_none(Game.game_link_id == context.args[0])
+        if not game:
             update.message.reply_text(
                 f"Игра с id '{context.args[0]}' не найдена.\n"
                 "Не расстраивайтесь, создайте новую игру."
