@@ -3,7 +3,6 @@ import random
 
 import telegram
 
-from environs import Env
 from models import GameMember, Match, Game, User, GameAdmin
 
 
