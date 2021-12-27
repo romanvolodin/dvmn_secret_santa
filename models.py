@@ -31,7 +31,7 @@ class Game(BaseModel):
     deadline = DateTimeField()
     budget = CharField()
     gift_send_date = DateTimeField()
-    created_by = ForeignKeyField(User, backref="games")
+    created_by = ForeignKeyField(User, backref="created_games")
 
 
 class GameAdmin(BaseModel):
