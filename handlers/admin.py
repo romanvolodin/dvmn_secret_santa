@@ -279,7 +279,19 @@ def get_game_by_id(game_id):
 
 
 def show_created_games_handler(update: Update, context: CallbackContext):
-    pass
+    user = context.user_data["current_user"]
+    keyboard = []
+    for game in user.created_games:
+        keyboard.append(
+            [InlineKeyboardButton(game.title, callback_data=game.game_link_id)]
+        )
+
+    reply_markup = InlineKeyboardMarkup(keyboard)
+    update.message.reply_text(
+        text="Игры, в которых вы админ:",
+        reply_markup=reply_markup,
+    )
+    # TODO: Куда-то надо дальше переходить, не понимаю куда
 
 
 def show_participating_in_games_handler(update: Update, context: CallbackContext):
