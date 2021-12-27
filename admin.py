@@ -20,6 +20,9 @@ from handlers.game import BUDGET_OPTIONS, DEADLINE_OPTIONS, regex_for_date
 from models import Game, GameAdmin, GameMember, User
 
 
+INITIAL_CHOICE = range(1)
+button_cancel = "Отмена"
+
 def games(update: Update, context: CallbackContext):
     effective_user_id = update.effective_user.id
     admins_games = Game.select().where(Game.created_by == effective_user_id)
@@ -280,6 +283,39 @@ def edit_game_send_date(update: Update, context: CallbackContext):
 
 def get_game_by_id(game_id):
     return Game.get(Game.game_link_id == game_id)
+
+
+def show_created_games_handler(update: Update, context: CallbackContext):
+    user = context.user_data["current_user"]
+    keyboard = []
+    for game in user.created_games:
+        keyboard.append(
+            [InlineKeyboardButton(game.title, callback_data=game.game_link_id)]
+        )
+
+    reply_markup = InlineKeyboardMarkup(keyboard)
+    update.message.reply_text(
+        text="Игры, в которых вы админ:",
+        reply_markup=reply_markup,
+    )
+    # TODO: Куда-то надо дальше переходить, не понимаю куда
+
+
+def show_participating_in_games_handler(update: Update, context: CallbackContext):
+    user = context.user_data["current_user"]
+    member_in_games = Game.select().join(GameMember).where(GameMember.user == user)
+    keyboard = []
+    for game in member_in_games:
+        keyboard.append(
+            [InlineKeyboardButton(game.title, callback_data=game.game_link_id)]
+        )
+
+    reply_markup = InlineKeyboardMarkup(keyboard)
+    update.message.reply_text(
+        text="Игры, в которых вы участвуете:",
+        reply_markup=reply_markup,
+    )
+    # TODO: Куда-то надо дальше переходить, не понимаю куда
 
 
 def admin_main(token, updater, dispatcher):

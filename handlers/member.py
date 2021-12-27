@@ -10,7 +10,7 @@ from telegram.ext import (
     ConversationHandler,
 )
 from handlers import game as gm
-from handlers import admin
+import admin
 from models import User, GameMember
 
 

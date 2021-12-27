@@ -11,7 +11,8 @@ from telegram.ext import (
     ConversationHandler,
 )
 
-from handlers import member, admin
+import admin
+from handlers import member
 from handlers import game as gm
 from models import Game, GameMember, GameAdmin, User
 
