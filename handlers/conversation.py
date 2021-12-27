@@ -76,7 +76,6 @@ def start(update: Update, context: CallbackContext):
             f"Вы создали {len(admin_in_games)} игр и участвуете в {len(member_in_games)} играх.",
             reply_markup=ReplyKeyboardMarkup(
                 [
-                    ["Посмотреть созданные", "Посмотреть, где участвую"],
                     ["Создать новую игру", "Поменять данные"],
                 ],
                 resize_keyboard=True,
@@ -209,14 +208,6 @@ conversation_handler = ConversationHandler(
             )
         ],
         admin.INITIAL_CHOICE: [
-            MessageHandler(
-                Filters.regex("^Посмотреть созданные$"),
-                admin.show_created_games_handler,
-            ),
-            MessageHandler(
-                Filters.regex("^Посмотреть, где участвую$"),
-                admin.show_participating_in_games_handler,
-            ),
             MessageHandler(
                 Filters.regex("^Создать новую игру$"),
                 gm.game_title_handler,
