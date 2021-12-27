@@ -137,12 +137,7 @@ def create_game_handler(update: Update, context: CallbackContext):
 
 def change_data_choice_handler(update: Update, context: CallbackContext):
     context.user_data["data_to_change"] = None
-    user = (
-        GameMember.select()
-        .where(GameMember.user_id == update.message.from_user.id)
-        .get()
-        .user
-    )
+    user = context.user_data["current_user"]
     update.message.reply_text(
         f"Ваши регистрационные данные:\n"
         f"• имя: {user.name},\n"
