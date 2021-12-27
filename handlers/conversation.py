@@ -49,7 +49,7 @@ def start(update: Update, context: CallbackContext):
 
         if game:
             context.user_data["current_game"] = game
-            if game in member_in_games:
+            if member_in_games is not None and game in member_in_games:
                 update.message.reply_text("Вы уже в игре!")
                 return member.INITIAL_CHOICE
 
