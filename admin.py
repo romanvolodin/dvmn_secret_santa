@@ -94,25 +94,31 @@ def show_members(update: Update, context: CallbackContext):
     reply_markup = InlineKeyboardMarkup(keyboard)
     query.message.reply_text(
         text=f"Участники игры “{game.title}“.\n\n"
-        f"Выберите участника, чтобы удалить:",
+        f"Выберите участника, чтобы удалить или назначить админом",
         reply_markup=reply_markup,
     )
 
 
 def call_delete_member(update: Update, context: CallbackContext):
     query = update.callback_query
-    user_id_to_delete = query.data
+    user_id = query.data
     reply_markup = InlineKeyboardMarkup(
         [
             [
                 InlineKeyboardButton(
-                    "Да", callback_data=f"delete_member:{user_id_to_delete}"
+                    "Да", callback_data=f"delete_member:{user_id}"
+                )
+            ],
+            [
+                InlineKeyboardButton(
+                    "Назначить админом",
+                    callback_data=f"make_admin:{user_id}"
                 )
             ],
         ]
     )
     query.message.reply_text(
-        text="Удалить этого пользователя из игры?",
+        text="Что сделать с этим пользователем?",
         reply_markup=reply_markup,
     )
 
@@ -122,6 +128,20 @@ def delete_member(update: Update, context: CallbackContext):
     user_id_to_delete = int(query.data.split(":")[-1])
     GameMember.delete_by_id(user_id_to_delete)
     query.edit_message_text(text="Ок. Пользователь удален из игры")
+
+
+def make_admin(update: Update, context: CallbackContext):
+    query = update.callback_query
+    user_id_to_make_admin = int(query.data.split(":")[-1])
+    user_id = GameMember.get(GameMember.id == user_id_to_make_admin).user_id
+
+    game_link_id = context.user_data["current_game_id"]
+    game_id = Game.get(Game.game_link_id == game_link_id)
+    GameAdmin.create(
+            user_id=user_id,
+            game_id=game_id,
+        )
+    query.edit_message_text(text="Ок. Пользователь добавлен в админы игры")
 
 
 def ask_for_draw(update: Update, context: CallbackContext):
@@ -354,4 +374,7 @@ def admin_main(token, updater, dispatcher):
     )
     dispatcher.add_handler(
         CallbackQueryHandler(delete_member, pattern="^delete_member\W")
+    )
+    dispatcher.add_handler(
+        CallbackQueryHandler(make_admin, pattern="^make_admin\W")
     )
