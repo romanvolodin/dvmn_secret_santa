@@ -187,7 +187,7 @@ def change_nothing_handler(update: Update, context: CallbackContext):
                 resize_keyboard=True,
             ),
         )
-        return admin.INITIAL_CHOICE        
+        return admin.INITIAL_CHOICE
     else:
         update.message.reply_text(
             reply,
