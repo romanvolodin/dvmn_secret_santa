@@ -295,7 +295,20 @@ def show_created_games_handler(update: Update, context: CallbackContext):
 
 
 def show_participating_in_games_handler(update: Update, context: CallbackContext):
-    pass
+    user = context.user_data["current_user"]
+    member_in_games = Game.select().join(GameMember).where(GameMember.user == user)
+    keyboard = []
+    for game in member_in_games:
+        keyboard.append(
+            [InlineKeyboardButton(game.title, callback_data=game.game_link_id)]
+        )
+
+    reply_markup = InlineKeyboardMarkup(keyboard)
+    update.message.reply_text(
+        text="Игры, в которых вы участвуете:",
+        reply_markup=reply_markup,
+    )
+    # TODO: Куда-то надо дальше переходить, не понимаю куда
 
 
 if __name__ == "__main__":
