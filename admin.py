@@ -2,25 +2,22 @@ import datetime as dt
 import logging
 
 from telegram import (
-    Update,
     InlineKeyboardButton,
     InlineKeyboardMarkup,
+    Update
 )
 from telegram.ext import (
     CallbackContext,
+    CallbackQueryHandler,
     CommandHandler,
-    MessageHandler,
     Filters,
-    CallbackQueryHandler
+    MessageHandler
 )
 from telegram.utils import helpers
 
-from models import GameAdmin, Game, GameMember, User
 from draw import manual_draw
 from handlers.game import BUDGET_OPTIONS, DEADLINE_OPTIONS, regex_for_date
-
-
-button_cancel = "Отмена"
+from models import Game, GameAdmin, GameMember, User
 
 
 def games(update: Update, context: CallbackContext):
