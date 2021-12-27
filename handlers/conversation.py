@@ -51,7 +51,15 @@ def start(update: Update, context: CallbackContext):
         if game:
             context.user_data["current_game"] = game
             if member_in_games is not None and game in member_in_games:
-                update.message.reply_text("Вы уже в игре!")
+                update.message.reply_text("Вы уже в игре!",
+                    reply_markup=ReplyKeyboardMarkup(
+                        [
+                            ["Создать игру"],
+                            ["Поменять регистрационные данные"],
+                        ],
+                    resize_keyboard=True,
+                    ),
+                )
                 return member.INITIAL_CHOICE
 
             reply_markup = ReplyKeyboardMarkup(
@@ -181,9 +189,6 @@ conversation_handler = ConversationHandler(
             )
         ],
         member.INITIAL_CHOICE: [
-            MessageHandler(
-                Filters.regex("^Посмотреть игры$"), member.show_games_handler
-            ),
             MessageHandler(Filters.regex("^Создать игру$"), gm.game_title_handler),
             MessageHandler(
                 Filters.regex("^Поменять регистрационные данные$"),

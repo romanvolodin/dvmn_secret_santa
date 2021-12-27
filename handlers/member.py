@@ -115,7 +115,7 @@ def show_games_handler(update: Update, context: CallbackContext):
         "Не знаю как показать игры (\n" "Верните мне bare SQL syntax!",
         reply_markup=ReplyKeyboardMarkup(
             [
-                ["Посмотреть игры", "Создать игру"],
+                ["Создать игру"],
                 ["Поменять регистрационные данные"],
             ],
             resize_keyboard=True,
@@ -176,7 +176,6 @@ def change_nothing_handler(update: Update, context: CallbackContext):
             reply,
             reply_markup=ReplyKeyboardMarkup(
                 [
-                    ["Посмотреть созданные", "Посмотреть, где участвую"],
                     ["Создать новую игру", "Поменять данные"],
                 ],
                 resize_keyboard=True,
@@ -188,7 +187,7 @@ def change_nothing_handler(update: Update, context: CallbackContext):
             reply,
             reply_markup=ReplyKeyboardMarkup(
                 [
-                    ["Посмотреть игры", "Создать игру"],
+                    ["Создать игру"],
                     ["Поменять регистрационные данные"],
                 ],
                 resize_keyboard=True,
