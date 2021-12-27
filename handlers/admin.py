@@ -17,7 +17,7 @@ from telegram.ext import (
 )
 
 from models import GameAdmin, Game, GameMember, User
-from draw import manual_draw
+from draw import make_draw
 from handlers.game import BUDGET_OPTIONS, DEADLINE_OPTIONS, regex_for_date
 
 INITIAL_CHOICE = range(1)

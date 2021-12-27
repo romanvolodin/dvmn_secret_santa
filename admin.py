@@ -15,7 +15,7 @@ from telegram.ext import (
 )
 from telegram.utils import helpers
 
-from draw import manual_draw
+from draw import make_draw
 from handlers.game import BUDGET_OPTIONS, DEADLINE_OPTIONS, regex_for_date
 from models import Game, GameAdmin, GameMember, User
 
@@ -139,7 +139,7 @@ def ask_for_draw(update: Update, context: CallbackContext):
 
 
 def make_draw(update: Update, context: CallbackContext):
-    manual_draw(context.user_data["current_game_id"], bot_token)
+    make_draw(context.user_data["current_game_id"], bot_token)
 
 
 def edit_game(update: Update, context: CallbackContext):
