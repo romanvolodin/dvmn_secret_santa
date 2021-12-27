@@ -1,27 +1,24 @@
 import datetime as dt
 import logging
 
-from telegram import (
-    InlineKeyboardButton,
-    InlineKeyboardMarkup,
-    Update
-)
+from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
 from telegram.ext import (
     CallbackContext,
     CallbackQueryHandler,
     CommandHandler,
     Filters,
-    MessageHandler
+    MessageHandler,
 )
 from telegram.utils import helpers
 
-from draw import make_draw
+from draw import make_draw as _make_draw
 from handlers.game import BUDGET_OPTIONS, DEADLINE_OPTIONS, regex_for_date
 from models import Game, GameAdmin, GameMember, User
 
 
 INITIAL_CHOICE = range(1)
 button_cancel = "Отмена"
+
 
 def games(update: Update, context: CallbackContext):
     effective_user_id = update.effective_user.id
@@ -142,7 +139,7 @@ def ask_for_draw(update: Update, context: CallbackContext):
 
 
 def make_draw(update: Update, context: CallbackContext):
-    make_draw(context.user_data["current_game_id"], bot_token)
+    _make_draw(context.user_data["current_game_id"], bot_token)
 
 
 def edit_game(update: Update, context: CallbackContext):
