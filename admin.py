@@ -67,57 +67,51 @@ def show_members(update: Update, context: CallbackContext):
     game = get_game_by_id(context.user_data["current_game_id"])
     game_members = GameMember.select().where(GameMember.game_id == game.id)
 
-    query.message.reply_text(f"Участники игры “{game.title}“:")
-    available_user_ids = []
+    available_user_ids, keyboard = [], []
     for member in game_members:
         user_form = User.get_by_id(member.user_id)
-        query.message.reply_text(
-            f"id:{member.id}\n" f"{user_form.name}, email: {user_form.email}"
+        keyboard.append(
+            [
+                InlineKeyboardButton(
+                    f"{user_form.name}, email: {user_form.email}",
+                    callback_data=member.id,
+                )
+            ]
         )
         available_user_ids.append(member.id)
+
     context.user_data["available_user_ids"] = available_user_ids
+    reply_markup = InlineKeyboardMarkup(keyboard)
     query.message.reply_text(
-        "Чтобы удалить участника введите команду /delete и id участника.\n\n"
-        "Например: /delete 15"
-    )
-    dispatcher.add_handler(
-        CommandHandler("delete", call_delete_member, Filters.user(user_ids))
+        text=f"Участники игры “{game.title}“.\n\n"
+        f"Выберите участника, чтобы удалить:",
+        reply_markup=reply_markup,
     )
 
 
 def call_delete_member(update: Update, context: CallbackContext):
-    # TODO обработать IndexError, если юзер не укажет id
-    if not context.args[0].isdigit():
-        update.message.reply_text("Введите корректный id. Например: /delete 15")
-    else:
-        user_id_to_delete = int(context.args[0])
-        if user_id_to_delete in context.user_data["available_user_ids"]:
-            keyboard = [
-                [InlineKeyboardButton("Удалить", callback_data=f"{user_id_to_delete}")],
-                [InlineKeyboardButton(button_cancel, callback_data=button_cancel)],
-            ]
-
-            reply_markup = InlineKeyboardMarkup(keyboard)
-            update.message.reply_text(
-                text=f"Удалить участника с id {user_id_to_delete}?",
-                reply_markup=reply_markup,
-            )
-            updater.dispatcher.add_handler(CallbackQueryHandler(delete_member))
-        else:
-            update.message.reply_text(
-                text=f"Пользователь с id {user_id_to_delete} не найден в этой игре"
-            )
+    query = update.callback_query
+    user_id_to_delete = query.data
+    reply_markup = InlineKeyboardMarkup(
+        [
+            [
+                InlineKeyboardButton(
+                    "Да", callback_data=f"delete_member:{user_id_to_delete}"
+                )
+            ],
+        ]
+    )
+    query.message.reply_text(
+        text="Удалить этого пользователя из игры?",
+        reply_markup=reply_markup,
+    )
 
 
 def delete_member(update: Update, context: CallbackContext):
-    callback_query = update.callback_query.data
-    if callback_query == button_cancel:
-        pass
-        # TODO добавить обработку отмены операции
-    else:
-        user_id_to_delete = callback_query
-        GameMember.delete_by_id(user_id_to_delete)
-        # TODO добавить сообщение, что пользователь удален
+    query = update.callback_query
+    user_id_to_delete = int(query.data.split(":")[-1])
+    GameMember.delete_by_id(user_id_to_delete)
+    query.edit_message_text(text="Ок. Пользователь удален из игры")
 
 
 def ask_for_draw(update: Update, context: CallbackContext):
@@ -312,6 +306,12 @@ if __name__ == "__main__":
             pattern=f"^{BUDGET_OPTIONS[0]}|{BUDGET_OPTIONS[1]}|"
             f"{BUDGET_OPTIONS[2]}|{BUDGET_OPTIONS[3]}$",
         )
+    )
+    dispatcher.add_handler(
+        CallbackQueryHandler(call_delete_member, pattern="^[0-9]{1,2}$")
+    )
+    dispatcher.add_handler(
+        CallbackQueryHandler(delete_member, pattern="^delete_member\W")
     )
 
     updater.start_polling()
