@@ -3,7 +3,13 @@ import random
 
 import telegram
 
-from models import GameMember, Match, Game, User, GameAdmin
+from models import (
+    Game,
+    GameAdmin,
+    GameMember,
+    Match,
+    User,
+)
 
 
 def draw(users, game_id):
