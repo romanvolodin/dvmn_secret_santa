@@ -26,18 +26,16 @@ button_cancel = "Отмена"
 
 
 def games(update: Update, context: CallbackContext):
-    effective_user_id = update.effective_user.id
-    bot = context.bot
-    admins_games = Game.select().where(Game.created_by == effective_user_id)
-    games_id_titles = [(game.game_link_id, game.title) for game in admins_games]
-
+    user = User.get_by_id(update.effective_user.idd)
     keyboard = []
-    for game_id, game_title in games_id_titles:
-        keyboard.append([InlineKeyboardButton(game_title, callback_data=game_id)])
+    for game in user.created_games:
+        keyboard.append(
+            [InlineKeyboardButton(game.title, callback_data=game.game_link_id)]
+        )
 
     reply_markup = InlineKeyboardMarkup(keyboard)
     update.message.reply_text(
-        text=f"Игры, в которых вы админ:",
+        text="Игры, в которых вы админ:",
         reply_markup=reply_markup,
     )
 
@@ -303,9 +301,7 @@ if __name__ == "__main__":
     updater = Updater(token=env.str("BOT_TOKEN"), use_context=True)
     dispatcher = updater.dispatcher
 
-    dispatcher.add_handler(
-        CommandHandler("games", games, Filters.user(user_ids))
-    )
+    dispatcher.add_handler(CommandHandler("games", games, Filters.user(user_ids)))
     dispatcher.add_handler(CallbackQueryHandler(show_game, pattern="^[a-z0-9]{8}$"))
     dispatcher.add_handler(CallbackQueryHandler(show_members, pattern="^members$"))
     dispatcher.add_handler(CallbackQueryHandler(edit_game, pattern="^edit$"))
