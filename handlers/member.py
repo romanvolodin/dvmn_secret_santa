@@ -140,11 +140,11 @@ def change_data_choice_handler(update: Update, context: CallbackContext):
     user = context.user_data["current_user"]
     update.message.reply_text(
         f"Ваши регистрационные данные:\n"
-        f"• имя: {user.name},\n"
-        f"• email: {user.email},\n"
-        f"• пожелания: {user.wishlist},\n"
-        f"• интересы: {user.interests},\n"
-        f"• письмо Санте: {user.letter}\n\n"
+        f"• имя: {'<пусто>' if user.name == '' else user.name},\n"
+        f"• email: {'<пусто>' if user.email == '' else user.email},\n"
+        f"• пожелания: {'<пусто>' if user.wishlist == '' else user.wishlist},\n"
+        f"• интересы: {'<пусто>' if user.interests == '' else user.interests},\n"
+        f"• письмо Санте: {'<пусто>' if user.letter == '' else user.letter}\n\n"
         "Что поменять?",
         reply_markup=ReplyKeyboardMarkup(
             [
