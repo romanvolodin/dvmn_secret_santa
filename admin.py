@@ -1,19 +1,17 @@
 import datetime as dt
 import logging
 
-from environs import Env
 from telegram import (
     Update,
     InlineKeyboardButton,
     InlineKeyboardMarkup,
 )
 from telegram.ext import (
-    Updater,
     CallbackContext,
     CommandHandler,
     MessageHandler,
     Filters,
-    CallbackQueryHandler,
+    CallbackQueryHandler
 )
 from telegram.utils import helpers
 
@@ -53,8 +51,9 @@ def show_game(update: Update, context: CallbackContext):
             InlineKeyboardButton("Изменить", callback_data="edit"),
         ],
         [
-            InlineKeyboardButton("Ссылка для регистрации в игре",
-                                 callback_data="show_link"),
+            InlineKeyboardButton(
+                "Ссылка для регистрации в игре", callback_data="show_link"
+            ),
         ],
         [
             InlineKeyboardButton("Провести жеребьевку", callback_data="draw"),
@@ -168,7 +167,7 @@ def edit_game(update: Update, context: CallbackContext):
         f"Что изменить?",
         reply_markup=reply_markup,
     )
-    updater.dispatcher.add_handler(CallbackQueryHandler(handle_game_edit))
+    admin_updater.dispatcher.add_handler(CallbackQueryHandler(handle_game_edit))
 
 
 def handle_game_edit(update: Update, context: CallbackContext):
@@ -177,7 +176,7 @@ def handle_game_edit(update: Update, context: CallbackContext):
     query.answer()
     if query_value == "title":
         query.edit_message_text(text="Укажите новое название:")
-        updater.dispatcher.add_handler(
+        admin_updater.dispatcher.add_handler(
             MessageHandler(Filters.text, edit_game_name, pass_user_data=True)
         )
     elif query_value == "budget":
@@ -226,7 +225,7 @@ def handle_game_edit(update: Update, context: CallbackContext):
         query.edit_message_text(
             text="Укажите новую дату отправки подарка в формате 13.01.2022:"
         )
-        updater.dispatcher.add_handler(
+        admin_updater.dispatcher.add_handler(
             MessageHandler(
                 Filters.regex(regex_for_date), edit_game_send_date, pass_user_data=True
             )
@@ -286,10 +285,7 @@ def get_game_by_id(game_id):
     return Game.get(Game.game_link_id == game_id)
 
 
-if __name__ == "__main__":
-    env = Env()
-    env.read_env()
-
+def admin_main(token, updater, dispatcher):
     logging.basicConfig(
         format="%(levelname)s: %(asctime)s - %(name)s - %(message)s", level=logging.INFO
     )
@@ -298,15 +294,15 @@ if __name__ == "__main__":
     admins_ids = [admin.user_id for admin in admins]
     user_ids = set(admins_ids)
 
-    bot_token = env.str("BOT_TOKEN")
-    updater = Updater(token=bot_token, use_context=True)
-    dispatcher = updater.dispatcher
+    global bot_token
+    global admin_updater
+    bot_token = token
+    admin_updater = updater
 
     dispatcher.add_handler(CommandHandler("games", games, Filters.user(user_ids)))
     dispatcher.add_handler(CallbackQueryHandler(show_game, pattern="^[a-z0-9]{8}$"))
     dispatcher.add_handler(CallbackQueryHandler(show_members, pattern="^members$"))
-    dispatcher.add_handler(
-        CallbackQueryHandler(show_link, pattern="^show_link$"))
+    dispatcher.add_handler(CallbackQueryHandler(show_link, pattern="^show_link$"))
     dispatcher.add_handler(CallbackQueryHandler(edit_game, pattern="^edit$"))
     dispatcher.add_handler(CallbackQueryHandler(ask_for_draw, pattern="^draw$"))
     dispatcher.add_handler(CallbackQueryHandler(make_draw, pattern="^make_draw$"))
@@ -329,6 +325,3 @@ if __name__ == "__main__":
     dispatcher.add_handler(
         CallbackQueryHandler(delete_member, pattern="^delete_member\W")
     )
-
-    updater.start_polling()
-    updater.idle()
