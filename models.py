@@ -48,3 +48,9 @@ class Match(BaseModel):
     game = ForeignKeyField(Game)
     giver = ForeignKeyField(User)
     recipient = ForeignKeyField(User)
+
+
+class RecipientException(BaseModel):
+    game = ForeignKeyField(Game)
+    giver = ForeignKeyField(User)
+    recipient = ForeignKeyField(User)
