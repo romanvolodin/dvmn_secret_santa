@@ -26,7 +26,6 @@ button_cancel = "Отмена"
 
 def games(update: Update, context: CallbackContext):
     effective_user_id = update.effective_user.id
-    bot = context.bot
     admins_games = Game.select().where(Game.created_by == effective_user_id)
     games_id_titles = [(game.game_link_id, game.title) for game in admins_games]
 
@@ -36,7 +35,7 @@ def games(update: Update, context: CallbackContext):
 
     reply_markup = InlineKeyboardMarkup(keyboard)
     update.message.reply_text(
-        text=f"Игры, в которых вы админ:",
+        text="Игры, в которых вы админ:",
         reply_markup=reply_markup,
     )
 
@@ -169,7 +168,7 @@ def handle_game_edit(update: Update, context: CallbackContext):
     query_value = update.callback_query.data
     query.answer()
     if query_value == "title":
-        query.edit_message_text(text=f"Укажите новое название:")
+        query.edit_message_text(text="Укажите новое название:")
         updater.dispatcher.add_handler(
             MessageHandler(Filters.text, edit_game_name, pass_user_data=True)
         )
@@ -195,7 +194,7 @@ def handle_game_edit(update: Update, context: CallbackContext):
             ]
         )
         query.edit_message_text(
-            text=f"Выберите новый бюджет:", reply_markup=reply_markup
+            text="Выберите новый бюджет:", reply_markup=reply_markup
         )
 
     elif query_value == "edit_deadline":
@@ -212,12 +211,12 @@ def handle_game_edit(update: Update, context: CallbackContext):
             ]
         )
         query.edit_message_text(
-            text=f"Выберите новый период регистрации:", reply_markup=reply_markup
+            text="Выберите новый период регистрации:", reply_markup=reply_markup
         )
 
     elif query_value == "send_date":
         query.edit_message_text(
-            text=f"Укажите новую дату отправки подарка в формате 13.01.2022:"
+            text="Укажите новую дату отправки подарка в формате 13.01.2022:"
         )
         updater.dispatcher.add_handler(
             MessageHandler(
@@ -295,9 +294,7 @@ if __name__ == "__main__":
     updater = Updater(token=bot_token, use_context=True)
     dispatcher = updater.dispatcher
 
-    dispatcher.add_handler(
-        CommandHandler("games", games, Filters.user(user_ids))
-    )
+    dispatcher.add_handler(CommandHandler("games", games, Filters.user(user_ids)))
     dispatcher.add_handler(CallbackQueryHandler(show_game, pattern="^[a-z0-9]{8}$"))
     dispatcher.add_handler(CallbackQueryHandler(show_members, pattern="^members$"))
     dispatcher.add_handler(CallbackQueryHandler(edit_game, pattern="^edit$"))
