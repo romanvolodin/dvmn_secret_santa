@@ -13,85 +13,66 @@ from telegram.ext import (
 
 from handlers import member, admin
 from handlers import game as gm
-from models import Game, GameMember, GameAdmin
+from models import Game, GameMember, GameAdmin, User
 
 
 def start(update: Update, context: CallbackContext):
-    admin_in_db = (
-        GameAdmin.select()
-        .where(GameAdmin.user_id == update.message.from_user.id)
-        .get_or_none()
-    )
-    member_in_db = (
-        GameMember.select()
-        .where(GameMember.user_id == update.message.from_user.id)
-        .get_or_none()
-    )  # Кто-нибудь! Уберите этот ужас...
+    current_user = User.get_or_none(User.id == update.effective_user.id)
+    admin_in_games = None
+    member_in_games = None
+    if current_user:
+        context.user_data["current_user"] = current_user
+        admin_in_games = (
+            Game.select().join(GameAdmin).where(GameAdmin.user == current_user)
+        )
+        member_in_games = (
+            Game.select().join(GameMember).where(GameMember.user == current_user)
+        )
+        if admin_in_games:
+            context.user_data["is_admin"] = True
+
     if context.args:
         reply_markup = ReplyKeyboardMarkup(
             keyboard=[[KeyboardButton(text="Регистрация")]]
         )
         game = Game.get_or_none(Game.game_link_id == context.args[0])
         if not game:
-            update.message.reply_text(
-                f"Игра с id '{context.args[0]}' не найдена.\n"
-                "Не расстраивайтесь, создайте новую игру."
+            reply_markup = ReplyKeyboardMarkup(
+                keyboard=[[KeyboardButton(text=gm.create_button_text)]]
             )
+            update.message.reply_text(
+                text=f"Игра с id '{context.args[0]}' не найдена.\n"
+                "Не расстраивайтесь, создайте новую игру.",
+                reply_markup=reply_markup,
+            )
+            return gm.GET_TITLE
+
         if game:
-            if member_in_db:
-                member_in_game = (
-                    GameMember.select()
-                    .where(GameMember.game_id == game.id)
-                    .get_or_none()
-                )
-                if member_in_game:
-                    update.message.reply_text(
-                        "Вы уже в игре!\n",
-                        reply_markup=ReplyKeyboardMarkup(
-                            [
-                                ["Посмотреть игры", "Создать игру"],
-                                ["Поменять регистрационные данные"],
-                            ],
-                            resize_keyboard=True,
-                        ),
-                    )
-                    return member.INITIAL_CHOICE
-                else:
-                    reply_markup = ReplyKeyboardMarkup(
-                        keyboard=[
-                            [KeyboardButton(text=member.button_accept)],
-                            [KeyboardButton(text=member.button_cancel)],
-                        ]
-                    )
-                    context.user_data["current_game"] = game
-                    update.message.reply_text(
-                        text=f"Замечательно, ты собираешься участвовать в игре “{game.title}“:\n"
-                        f"• ограничение стоимости подарка: {game.budget},\n"
-                        f"• период регистрации: до {game.deadline.strftime('%d.%m.%Y, %H:%M(МСК)')},\n"
-                        f"• дата отправки подарков: {game.gift_send_date.strftime('%d.%m.%Y')}",
-                        reply_markup=reply_markup,
-                    )
-                    return member.ADD_EXISTED_USER_TO_GAME
-            else:
-                reply_markup = ReplyKeyboardMarkup(
-                    keyboard=[
-                        [KeyboardButton(text=member.button_accept)],
-                        [KeyboardButton(text=member.button_cancel)],
-                    ]
-                )
-                context.user_data["current_game"] = game
-                update.message.reply_text(
-                    text=f"Замечательно, ты собираешься участвовать в игре “{game.title}“:\n"
-                    f"• ограничение стоимости подарка: {game.budget},\n"
-                    f"• период регистрации: до {game.deadline.strftime('%d.%m.%Y, %H:%M(МСК)')},\n"
-                    f"• дата отправки подарков: {game.gift_send_date.strftime('%d.%m.%Y')}",
-                    reply_markup=reply_markup,
-                )
-                return member.NAME
-    elif admin_in_db:
-        context.user_data["is_admin"] = True
+            context.user_data["current_game"] = game
+            if game in member_in_games:
+                update.message.reply_text("Вы уже в игре!")
+                return member.INITIAL_CHOICE
+
+            reply_markup = ReplyKeyboardMarkup(
+                keyboard=[
+                    [KeyboardButton(text=member.button_accept)],
+                    [KeyboardButton(text=member.button_cancel)],
+                ]
+            )
+            update.message.reply_text(
+                text=f"Замечательно, ты собираешься участвовать в игре “{game.title}“:\n"
+                f"• ограничение стоимости подарка: {game.budget},\n"
+                f"• период регистрации: до {game.deadline.strftime('%d.%m.%Y, %H:%M(МСК)')},\n"
+                f"• дата отправки подарков: {game.gift_send_date.strftime('%d.%m.%Y')}",
+                reply_markup=reply_markup,
+            )
+            if member_in_games:
+                return member.ADD_EXISTED_USER_TO_GAME
+            return member.NAME
+
+    if admin_in_games:
         update.message.reply_text(
-            "Вы создали N игр и участвуете в M играх.",
+            f"Вы создали {len(admin_in_games)} игр и участвуете в {len(member_in_games)} играх.",
             reply_markup=ReplyKeyboardMarkup(
                 [
                     ["Посмотреть созданные", "Посмотреть, где участвую"],
@@ -100,20 +81,7 @@ def start(update: Update, context: CallbackContext):
                 resize_keyboard=True,
             ),
         )
-        return admin.INITIAL_CHOICE        
-    elif member_in_db:
-        context.user_data["is_admin"] = False
-        update.message.reply_text(
-            "Вы участвуете в N играх",
-            reply_markup=ReplyKeyboardMarkup(
-                [
-                    ["Посмотреть игры", "Создать игру"],
-                    ["Поменять регистрационные данные"],
-                ],
-                resize_keyboard=True,
-            ),
-        )
-        return member.INITIAL_CHOICE
+        return admin.INITIAL_CHOICE
 
     reply_markup = ReplyKeyboardMarkup(
         keyboard=[[KeyboardButton(text=gm.create_button_text)]]
@@ -241,9 +209,13 @@ conversation_handler = ConversationHandler(
         ],
         admin.INITIAL_CHOICE: [
             MessageHandler(
-                Filters.regex("^Посмотреть созданные$"), admin.show_created_games_handler
+                Filters.regex("^Посмотреть созданные$"),
+                admin.show_created_games_handler,
             ),
-            MessageHandler(Filters.regex("^Посмотреть, где участвую$"), admin.show_participating_in_games_handler),
+            MessageHandler(
+                Filters.regex("^Посмотреть, где участвую$"),
+                admin.show_participating_in_games_handler,
+            ),
             MessageHandler(
                 Filters.regex("^Создать новую игру$"),
                 gm.game_title_handler,
