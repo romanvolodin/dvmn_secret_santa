@@ -15,6 +15,7 @@ from telegram.ext import (
     Filters,
     CallbackQueryHandler,
 )
+from telegram.utils import helpers
 
 from models import GameAdmin, Game, GameMember, User
 from draw import manual_draw
@@ -52,6 +53,10 @@ def show_game(update: Update, context: CallbackContext):
             InlineKeyboardButton("Изменить", callback_data="edit"),
         ],
         [
+            InlineKeyboardButton("Ссылка для регистрации в игре",
+                                 callback_data="show_link"),
+        ],
+        [
             InlineKeyboardButton("Провести жеребьевку", callback_data="draw"),
         ],
     ]
@@ -59,6 +64,15 @@ def show_game(update: Update, context: CallbackContext):
     query.message.reply_text(
         text=f"Что хотите сделать с игрой “{game.title}“?",
         reply_markup=reply_markup,
+    )
+
+
+def show_link(update: Update, context: CallbackContext):
+    current_game_id = context.user_data["current_game_id"]
+    bot_username = context.bot.username
+    deep_link = helpers.create_deep_linked_url(bot_username, current_game_id)
+    update.callback_query.message.reply_text(
+        f"Ссылка для регистрации в игре: {deep_link}"
     )
 
 
@@ -291,6 +305,8 @@ if __name__ == "__main__":
     dispatcher.add_handler(CommandHandler("games", games, Filters.user(user_ids)))
     dispatcher.add_handler(CallbackQueryHandler(show_game, pattern="^[a-z0-9]{8}$"))
     dispatcher.add_handler(CallbackQueryHandler(show_members, pattern="^members$"))
+    dispatcher.add_handler(
+        CallbackQueryHandler(show_link, pattern="^show_link$"))
     dispatcher.add_handler(CallbackQueryHandler(edit_game, pattern="^edit$"))
     dispatcher.add_handler(CallbackQueryHandler(ask_for_draw, pattern="^draw$"))
     dispatcher.add_handler(CallbackQueryHandler(make_draw, pattern="^make_draw$"))
